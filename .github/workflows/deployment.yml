@@ -5,10 +5,6 @@ on:
     branches: [main]
   workflow_dispatch:
 
-defaults:
-  run:
-    working-directory: neuroecho-cognitive-arcade-prototype-v3
-
 env:
   VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
   VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
@@ -16,6 +12,10 @@ env:
 jobs:
   # Deploy only runs after CI passes on main — never ship a build that
   # failed typecheck, lint, migrations, or the build itself.
+  # This job never checks out the repo (it only polls the CI check via the
+  # GitHub API), so it must NOT inherit a working-directory default — doing
+  # so made even this job's own abort step fail with "No such file or
+  # directory" before it could report the real CI failure.
   wait-for-ci:
     runs-on: ubuntu-latest
     steps:
@@ -38,6 +38,9 @@ jobs:
     environment:
       name: production
       url: ${{ steps.deploy.outputs.url }}
+    defaults:
+      run:
+        working-directory: neuroecho-cognitive-arcade-prototype-v3
     steps:
       - name: Checkout
         uses: actions/checkout@v4
