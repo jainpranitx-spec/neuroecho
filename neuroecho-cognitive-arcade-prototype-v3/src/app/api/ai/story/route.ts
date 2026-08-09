@@ -1,67 +1,61 @@
 import { NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
+import { GoogleGenAI } from "@google/genai";
 
 export async function POST(req: Request) {
   try {
     const { topic = "Gardening & Backyard Nature" } = await req.json();
 
-    const apiKey = process.env.ANTHROPIC_API_KEY;
+    const apiKey = process.env.GEMINI_API_KEY;
 
     if (apiKey) {
       try {
-        const client = new Anthropic({ apiKey });
+        const ai = new GoogleGenAI({ apiKey });
 
-        const response = await client.messages.create({
-          model: "claude-opus-5",
-          max_tokens: 1024,
-          system: `You are a cognitive game generator for seniors. Create a short, engaging 4-sentence story about the topic provided.
+        const response = await ai.models.generateContent({
+          model: "gemini-3.6-flash",
+          contents: `Generate story for topic: ${topic}`,
+          config: {
+            systemInstruction: `You are a cognitive game generator for seniors. Create a short, engaging 4-sentence story about the topic provided.
 One sentence MUST contain a deliberate, subtle historical or logical inaccuracy (the "AI lie").`,
-          messages: [
-            { role: "user", content: `Generate story for topic: ${topic}` },
-          ],
-          output_config: {
-            format: {
-              type: "json_schema",
-              schema: {
-                type: "object",
-                properties: {
-                  title: { type: "string" },
-                  topic: { type: "string" },
-                  sentences: {
-                    type: "array",
-                    items: { type: "string" },
-                    minItems: 4,
-                    maxItems: 4,
-                  },
-                  lieSentenceIndex: { type: "integer" },
-                  lieKeyword: { type: "string" },
-                  correctedKeyword: { type: "string" },
-                  explanation: { type: "string" },
-                  funFact: { type: "string" },
+            responseMimeType: "application/json",
+            responseJsonSchema: {
+              type: "object",
+              properties: {
+                title: { type: "string" },
+                topic: { type: "string" },
+                sentences: {
+                  type: "array",
+                  items: { type: "string" },
+                  minItems: 4,
+                  maxItems: 4,
                 },
-                required: [
-                  "title",
-                  "topic",
-                  "sentences",
-                  "lieSentenceIndex",
-                  "lieKeyword",
-                  "correctedKeyword",
-                  "explanation",
-                  "funFact",
-                ],
-                additionalProperties: false,
+                lieSentenceIndex: { type: "integer" },
+                lieKeyword: { type: "string" },
+                correctedKeyword: { type: "string" },
+                explanation: { type: "string" },
+                funFact: { type: "string" },
               },
+              required: [
+                "title",
+                "topic",
+                "sentences",
+                "lieSentenceIndex",
+                "lieKeyword",
+                "correctedKeyword",
+                "explanation",
+                "funFact",
+              ],
+              additionalProperties: false,
             },
           },
         });
 
-        const textBlock = response.content.find((b) => b.type === "text");
-        if (textBlock && textBlock.type === "text") {
-          const parsed = JSON.parse(textBlock.text);
+        if (response.text) {
+          const parsed = JSON.parse(response.text);
           return NextResponse.json(parsed);
         }
       } catch (err) {
-        console.warn("Claude API call failed, using smart fallback story generator", err);
+        console.warn("Gemini API call failed, using smart fallback story generator", err);
       }
     }
 
