@@ -1,51 +1,67 @@
 import { NextResponse } from "next/server";
+import Anthropic from "@anthropic-ai/sdk";
 
 export async function POST(req: Request) {
   try {
     const { topic = "Gardening & Backyard Nature" } = await req.json();
 
-    const apiKey = process.env.OPENAI_API_KEY;
+    const apiKey = process.env.ANTHROPIC_API_KEY;
 
     if (apiKey) {
       try {
-        const response = await fetch("https://api.openai.com/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${apiKey}`,
-          },
-          body: JSON.stringify({
-            model: "gpt-4o",
-            messages: [
-              {
-                role: "system",
-                content: `You are a cognitive game generator for seniors. Create a short, engaging 4-sentence story about the topic provided.
-One sentence MUST contain a deliberate, subtle historical or logical inaccuracy (the "AI lie").
-Return JSON in this format ONLY:
-{
-  "title": "Story Title",
-  "topic": "${topic}",
-  "sentences": ["Sentence 1", "Sentence 2 with inaccuracy", "Sentence 3", "Sentence 4"],
-  "lieSentenceIndex": 1,
-  "lieKeyword": "inaccurate phrase",
-  "correctedKeyword": "accurate phrase",
-  "explanation": "Brief explanation of why it is inaccurate.",
-  "funFact": "An interesting related fun fact for seniors."
-}`
+        const client = new Anthropic({ apiKey });
+
+        const response = await client.messages.create({
+          model: "claude-opus-5",
+          max_tokens: 1024,
+          system: `You are a cognitive game generator for seniors. Create a short, engaging 4-sentence story about the topic provided.
+One sentence MUST contain a deliberate, subtle historical or logical inaccuracy (the "AI lie").`,
+          messages: [
+            { role: "user", content: `Generate story for topic: ${topic}` },
+          ],
+          output_config: {
+            format: {
+              type: "json_schema",
+              schema: {
+                type: "object",
+                properties: {
+                  title: { type: "string" },
+                  topic: { type: "string" },
+                  sentences: {
+                    type: "array",
+                    items: { type: "string" },
+                    minItems: 4,
+                    maxItems: 4,
+                  },
+                  lieSentenceIndex: { type: "integer" },
+                  lieKeyword: { type: "string" },
+                  correctedKeyword: { type: "string" },
+                  explanation: { type: "string" },
+                  funFact: { type: "string" },
+                },
+                required: [
+                  "title",
+                  "topic",
+                  "sentences",
+                  "lieSentenceIndex",
+                  "lieKeyword",
+                  "correctedKeyword",
+                  "explanation",
+                  "funFact",
+                ],
+                additionalProperties: false,
               },
-              { role: "user", content: `Generate story for topic: ${topic}` }
-            ],
-            response_format: { type: "json_object" }
-          }),
+            },
+          },
         });
 
-        if (response.ok) {
-          const data = await response.json();
-          const parsed = JSON.parse(data.choices[0].message.content);
+        const textBlock = response.content.find((b) => b.type === "text");
+        if (textBlock && textBlock.type === "text") {
+          const parsed = JSON.parse(textBlock.text);
           return NextResponse.json(parsed);
         }
       } catch (err) {
-        console.warn("OpenAI API call failed, using smart fallback story generator", err);
+        console.warn("Claude API call failed, using smart fallback story generator", err);
       }
     }
 

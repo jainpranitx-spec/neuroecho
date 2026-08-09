@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import Anthropic from "@anthropic-ai/sdk";
 
 export async function POST(req: Request) {
   try {
@@ -8,37 +9,28 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Query parameter required" }, { status: 400 });
     }
 
-    const apiKey = process.env.OPENAI_API_KEY;
+    const apiKey = process.env.ANTHROPIC_API_KEY;
 
     if (apiKey) {
       try {
-        const response = await fetch("https://api.openai.com/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${apiKey}`,
-          },
-          body: JSON.stringify({
-            model: "gpt-4o",
-            messages: [
-              {
-                role: "system",
-                content: "You are NeuroEcho AI, a warm, clear, encouraging cognitive assistant for older adults. Keep responses concise, high-contrast, easy to read, with 2-3 clear key bullet points and a warm encouraging closing tone."
-              },
-              { role: "user", content: query }
-            ],
-          }),
+        const client = new Anthropic({ apiKey });
+
+        const response = await client.messages.create({
+          model: "claude-opus-5",
+          max_tokens: 1024,
+          system: "You are NeuroEcho AI, a warm, clear, encouraging cognitive assistant for older adults. Keep responses concise, high-contrast, easy to read, with 2-3 clear key bullet points and a warm encouraging closing tone.",
+          messages: [{ role: "user", content: query }],
         });
 
-        if (response.ok) {
-          const data = await response.json();
+        const textBlock = response.content.find((b) => b.type === "text");
+        if (textBlock && textBlock.type === "text") {
           return NextResponse.json({
-            answer: data.choices[0].message.content,
+            answer: textBlock.text,
             sources: ["NeuroEcho Cognitive Database", "Geriatric Cognitive Research 2025", "Perplexity Brain Health Hub"]
           });
         }
       } catch (e) {
-        console.warn("OpenAI query error:", e);
+        console.warn("Claude query error:", e);
       }
     }
 
