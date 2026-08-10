@@ -10,8 +10,10 @@ env:
   VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
 jobs:
-  # Deploy only runs after CI passes on main — never ship a build that
-  # failed typecheck, lint, migrations, or the build itself.
+  # Deploy only runs after the backend CI job passes on main — never ship a
+  # build that failed typecheck, lint, migrations, or the build itself.
+  # (Only gated on the "backend" CI job — the "mobile" CI job builds a
+  # separate app that isn't deployed by this workflow.)
   # This job never checks out the repo (it only polls the CI check via the
   # GitHub API), so it must NOT inherit a working-directory default — doing
   # so made even this job's own abort step fail with "No such file or
@@ -24,7 +26,7 @@ jobs:
         id: wait-for-ci
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          checkName: build-and-check
+          checkName: backend
           ref: ${{ github.sha }}
       - name: Fail if CI did not succeed
         if: steps.wait-for-ci.outputs.conclusion != 'success'

@@ -1,7 +1,12 @@
-# NeuroEcho — Cognitive Arcade
+# NeuroEcho — Backend API
 
-A Next.js app with a Postgres backend (via Drizzle ORM) and Gemini-powered
-AI features (story generation, Q&A assistant).
+This is the **backend only** — a Next.js app that exposes API routes backed
+by Postgres (via Drizzle ORM) and Gemini-powered AI features (story
+generation, Q&A assistant). It has no UI of its own; the actual app is the
+Expo/React Native project at [`../neuroecho-mobile`](../neuroecho-mobile),
+which runs on iOS and Android and calls these routes over HTTP.
+
+See the [repo root README](../README.md) for the overall architecture.
 
 ## 1. Install dependencies
 

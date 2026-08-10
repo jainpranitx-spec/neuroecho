@@ -6,13 +6,12 @@ on:
   pull_request:
     branches: [main]
 
-defaults:
-  run:
-    working-directory: neuroecho-cognitive-arcade-prototype-v3
-
 jobs:
-  build-and-check:
+  backend:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: neuroecho-cognitive-arcade-prototype-v3
     services:
       postgres:
         image: postgres:16-alpine
@@ -58,3 +57,31 @@ jobs:
           # Build-time only — never a real key. Confirms the AI routes'
           # fallback path compiles fine when no key is present at build.
           GEMINI_API_KEY: ""
+
+  mobile:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: neuroecho-mobile
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: neuroecho-mobile/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Bundle sanity check (iOS)
+        run: npx expo export --platform ios --output-dir /tmp/expo-export-ios
+
+      - name: Bundle sanity check (Android)
+        run: npx expo export --platform android --output-dir /tmp/expo-export-android

@@ -17,3 +17,4 @@
 .DS_Store
 *.tsbuildinfo
 npm-debug.log*
+next-env.d.ts
