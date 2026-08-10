@@ -1,0 +1,122 @@
+# Codemagic CI/CD configuration for React Native (neuroecho-mobile)
+# Configured for branch: 'latest'
+
+workflows:
+  # ==========================================
+  # 1. ANDROID WORKFLOW
+  # ==========================================
+  android-workflow:
+    name: Neuroecho Mobile - Android Build
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+    working_directory: neuroecho-mobile
+
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: 'latest'
+          include: true
+          source: true
+
+    environment:
+      node: 20.x
+      java: 17
+      groups:
+        - android_credentials # Configure in Codemagic UI Environment variables
+
+    scripts:
+      - name: Install dependencies
+        script: |
+          npm ci || npm install
+
+      - name: Set up Android SDK & Gradle permissions
+        script: |
+          chmod +x android/gradlew
+
+      - name: Build Android APK & Release Bundle (AAB)
+        script: |
+          cd android
+          ./gradlew assembleRelease bundleRelease
+
+    artifacts:
+      - neuroecho-mobile/android/app/build/outputs/apk/release/*.apk
+      - neuroecho-mobile/android/app/build/outputs/bundle/release/*.aab
+
+  # ==========================================
+  # 2. IOS WORKFLOW
+  # ==========================================
+  ios-workflow:
+    name: Neuroecho Mobile - iOS Build
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+    working_directory: neuroecho-mobile
+
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: 'latest'
+          include: true
+          source: true
+
+    environment:
+      node: 20.x
+      xcode: latest
+      cocoapods: default
+      groups:
+        - ios_credentials # Provisioning profiles & App Store Connect keys
+
+    scripts:
+      - name: Install Node dependencies
+        script: |
+          npm ci || npm install
+
+      - name: Install CocoaPods
+        script: |
+          cd ios
+          pod install
+
+      - name: Build iOS App (.ipa)
+        script: |
+          # Use xcodebuild or npx react-native build-ios
+          xcodebuild -workspace ios/neuroecho.xcworkspace                      -scheme neuroecho                      -sdk iphoneos                      -configuration Release                      -archivePath $HOME/Library/Developer/Xcode/Archives/neuroecho.xcarchive                      archive
+
+          xcodebuild -exportArchive                      -archivePath $HOME/Library/Developer/Xcode/Archives/neuroecho.xcarchive                      -exportOptionsPlist ios/exportOptions.plist                      -exportPath $HOME/build/ios/ipa
+
+    artifacts:
+      - $HOME/build/ios/ipa/*.ipa
+      - neuroecho-mobile/ios/build/*.xcarchive
+
+  # ==========================================
+  # 3. WEB WORKFLOW (React Native Web)
+  # ==========================================
+  web-workflow:
+    name: Neuroecho Mobile - Web Build
+    max_build_duration: 30
+    instance_type: mac_mini_m2
+    working_directory: neuroecho-mobile
+
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: 'latest'
+          include: true
+          source: true
+
+    environment:
+      node: 20.x
+
+    scripts:
+      - name: Install dependencies
+        script: |
+          npm ci || npm install
+
+      - name: Build Web Bundle
+        script: |
+          npm run build:web || npx webpack --config webpack.config.js --mode production
+
+    artifacts:
+      - neuroecho-mobile/dist/**
+      - neuroecho-mobile/build/**
