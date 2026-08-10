@@ -1,0 +1,56 @@
+name: Build Mobile App (EAS)
+
+# Manual trigger only — native iOS/Android builds are slow and consume EAS
+# build credits, so this doesn't run on every push like CI does. Trigger it
+# from the Actions tab when you actually want a new build.
+on:
+  workflow_dispatch:
+    inputs:
+      profile:
+        description: "EAS build profile"
+        required: true
+        default: preview
+        type: choice
+        options:
+          - development
+          - preview
+          - production
+      platform:
+        description: "Target platform"
+        required: true
+        default: all
+        type: choice
+        options:
+          - all
+          - ios
+          - android
+
+defaults:
+  run:
+    working-directory: neuroecho-mobile
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: neuroecho-mobile/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Set up EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Build
+        run: eas build --profile ${{ inputs.profile }} --platform ${{ inputs.platform }} --non-interactive

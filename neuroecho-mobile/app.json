@@ -1,0 +1,40 @@
+{
+  "expo": {
+    "name": "NeuroEcho",
+    "slug": "neuroecho-mobile",
+    "scheme": "neuroecho",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.neuroecho.arcade",
+      "infoPlist": {
+        "NSCameraUsageDescription": "NeuroEcho uses the camera for the Motion Match dual-task game stage."
+      }
+    },
+    "android": {
+      "package": "com.neuroecho.arcade",
+      "adaptiveIcon": {
+        "backgroundColor": "#E6F4FE",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false,
+      "permissions": ["CAMERA"]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "NeuroEcho uses the camera for the Motion Match dual-task game stage."
+        }
+      ]
+    ]
+  }
+}
