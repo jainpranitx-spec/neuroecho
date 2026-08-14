@@ -27,8 +27,15 @@ export default function MotionMatchScreen() {
   } | null>(null);
 
   const confettiRef = useRef<ConfettiBurstHandle>(null);
+  // Absorbs same-tick double-fires (a stuck touch, an accidental double-tap)
+  // without throttling legitimate fast reactions on the next target — see
+  // SpotAiLieScreen for the general pattern this is a variant of.
+  const actionLockRef = useRef(false);
+  const startGameLockRef = useRef(false);
 
   const handleStartGame = async () => {
+    if (startGameLockRef.current) return;
+    startGameLockRef.current = true;
     setIsPlaying(true);
     setCurrentTargetIndex(0);
     setScore(0);
@@ -36,18 +43,28 @@ export default function MotionMatchScreen() {
     setLastActionResult(null);
     startTimeRef.current = Date.now();
 
-    if (!permission?.granted) {
-      const result = await requestPermission();
-      if (!result.granted) {
-        setCameraError("Camera permission denied. Dual-task simulator active!");
+    try {
+      if (!permission?.granted) {
+        const result = await requestPermission();
+        if (!result.granted) {
+          setCameraError("Camera permission denied. Dual-task simulator active!");
+        }
       }
+      speakFeedback("Motion match started! Tap Left for Fruit, Right for Machine.");
+    } catch (err) {
+      console.warn("[MotionMatch] camera permission request failed", err);
+      setCameraError("Couldn't reach the camera. Dual-task simulator active!");
+    } finally {
+      startGameLockRef.current = false;
     }
-
-    speakFeedback("Motion match started! Tap Left for Fruit, Right for Machine.");
   };
 
   const handleGestureAction = (actionTaken: "left" | "right") => {
-    if (!isPlaying) return;
+    if (!isPlaying || actionLockRef.current) return;
+    actionLockRef.current = true;
+    setTimeout(() => {
+      actionLockRef.current = false;
+    }, 120);
 
     const reactionTime = Date.now() - startTimeRef.current;
     setReactionTimeMs(reactionTime);
@@ -81,17 +98,17 @@ export default function MotionMatchScreen() {
         durationSeconds: 30,
         details: { summary: "Completed Dual-Task Motor Training Session", reactionTimeMs },
       })
-      .catch(() => {});
+      .catch((e) => console.warn("[MotionMatch] session save failed", e));
   };
 
   const hasCamera = isPlaying && permission?.granted;
 
   return (
-    <View className="flex-1 bg-zinc-50">
+    <View className="flex-1 bg-zinc-50 dark:bg-zinc-950">
       <ConfettiBurst ref={confettiRef} />
       <ScrollView contentContainerStyle={{ padding: 16, gap: 20 }}>
         <View className="flex-row items-center justify-between">
-          <Text className="text-sm font-semibold text-zinc-500">
+          <Text className="text-sm font-semibold text-zinc-500 dark:text-zinc-400">
             Dual-Task rule: Fruit = Left, Machine = Right
           </Text>
           <View className="flex-row items-center gap-2">

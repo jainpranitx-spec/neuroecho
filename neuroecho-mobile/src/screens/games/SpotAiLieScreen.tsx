@@ -17,6 +17,7 @@ import { StoryLieItem } from "../../lib/types";
 import { speakFeedback, speakText, stopSpeech } from "../../lib/speech";
 import { api } from "../../lib/api";
 import ConfettiBurst, { ConfettiBurstHandle } from "../../components/ConfettiBurst";
+import { useAsyncGuard } from "../../lib/useAsyncGuard";
 
 export default function SpotAiLieScreen() {
   const [stories, setStories] = useState<StoryLieItem[]>(SPOT_LIE_STORIES);
@@ -34,9 +35,16 @@ export default function SpotAiLieScreen() {
 
   const [customTopic, setCustomTopic] = useState("");
   const [isGeneratingAiStory, setIsGeneratingAiStory] = useState(false);
+  const [generationError, setGenerationError] = useState<string | null>(null);
 
   const speechControllerRef = useRef<{ cancel: () => void } | null>(null);
   const confettiRef = useRef<ConfettiBurstHandle>(null);
+  const generateGuard = useAsyncGuard();
+  // Mirrors `hasBuzzed` but updates synchronously — `hasBuzzed` itself can't
+  // guard against a double-tap landing before the first tap's re-render,
+  // since both reads would still see the stale `false` from the same
+  // closure. See useAsyncGuard.ts for the full explanation.
+  const hasBuzzedRef = useRef(false);
 
   useEffect(() => {
     return () => {
@@ -48,6 +56,7 @@ export default function SpotAiLieScreen() {
     stopSpeech();
     setIsPlaying(false);
     setHasBuzzed(false);
+    hasBuzzedRef.current = false;
     setIsCorrect(null);
     setBuzzedSentenceIndex(null);
     setActiveSentenceIndex(-1);
@@ -57,6 +66,7 @@ export default function SpotAiLieScreen() {
     stopSpeech();
     setIsPlaying(true);
     setHasBuzzed(false);
+    hasBuzzedRef.current = false;
     setIsCorrect(null);
     setBuzzedSentenceIndex(null);
     setActiveSentenceIndex(0);
@@ -77,6 +87,9 @@ export default function SpotAiLieScreen() {
   };
 
   const handleBuzzerPress = (overrideIndex?: number) => {
+    if (hasBuzzedRef.current) return;
+    hasBuzzedRef.current = true;
+
     stopSpeech();
     setIsPlaying(false);
 
@@ -104,7 +117,7 @@ export default function SpotAiLieScreen() {
             summary: "Successfully detected AI inaccuracy",
           },
         })
-        .catch(() => {});
+        .catch((e) => console.warn("[SpotAiLie] session save failed", e));
     } else {
       speakFeedback(
         "Good try! The lie was actually in a different sentence. Check the explanation below.",
@@ -123,45 +136,50 @@ export default function SpotAiLieScreen() {
             summary: "Missed exact lie sentence",
           },
         })
-        .catch(() => {});
+        .catch((e) => console.warn("[SpotAiLie] session save failed", e));
     }
   };
 
-  const handleGenerateCustomStory = async () => {
-    if (!customTopic.trim()) return;
-    setIsGeneratingAiStory(true);
-    stopSpeech();
-    try {
-      const newStory = await api.generateStory(customTopic);
-      newStory.id = `ai-custom-${Date.now()}`;
-      setStories((prev) => [newStory, ...prev]);
-      setCurrentStoryIndex(0);
-      setCustomTopic("");
-      setHasBuzzed(false);
-      setIsCorrect(null);
-      speakFeedback(`New story generated about ${newStory.topic}! Tap play to listen.`);
-    } catch {
-      // silently keep existing stories if generation fails
-    } finally {
-      setIsGeneratingAiStory(false);
-    }
-  };
+  const handleGenerateCustomStory = () =>
+    generateGuard.runGuarded(async () => {
+      if (!customTopic.trim()) return;
+      setIsGeneratingAiStory(true);
+      setGenerationError(null);
+      stopSpeech();
+      try {
+        const newStory = await api.generateStory(customTopic);
+        newStory.id = `ai-custom-${Date.now()}`;
+        setStories((prev) => [newStory, ...prev]);
+        setCurrentStoryIndex(0);
+        setCustomTopic("");
+        setHasBuzzed(false);
+        hasBuzzedRef.current = false;
+        setIsCorrect(null);
+        speakFeedback(`New story generated about ${newStory.topic}! Tap play to listen.`);
+      } catch (err) {
+        console.warn("[SpotAiLie] story generation failed", err);
+        setGenerationError("Couldn't reach NeuroEcho AI — check your connection and try again.");
+      } finally {
+        setIsGeneratingAiStory(false);
+      }
+    });
 
   const handleNextStory = () => {
     stopSpeech();
     setIsPlaying(false);
     setHasBuzzed(false);
+    hasBuzzedRef.current = false;
     setIsCorrect(null);
     setActiveSentenceIndex(-1);
     setCurrentStoryIndex((prev) => (prev + 1) % stories.length);
   };
 
   return (
-    <View className="flex-1 bg-zinc-50">
+    <View className="flex-1 bg-zinc-50 dark:bg-zinc-950">
       <ConfettiBurst ref={confettiRef} />
       <ScrollView contentContainerStyle={{ padding: 16, gap: 20 }}>
         <View className="flex-row items-center justify-between">
-          <View className="rounded-2xl bg-amber-50 px-4 py-2">
+          <View className="rounded-2xl bg-amber-50 px-4 py-2 dark:bg-amber-950/40">
             <Text className="text-lg font-bold text-amber-700">{score} Points</Text>
           </View>
         </View>
@@ -182,12 +200,12 @@ export default function SpotAiLieScreen() {
                 className={`rounded-2xl border px-4 py-2.5 ${
                   currentStoryIndex === idx
                     ? "border-amber-500 bg-amber-500"
-                    : "border-zinc-200 bg-white"
+                    : "border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-900"
                 }`}
               >
                 <Text
                   className={`text-sm font-semibold ${
-                    currentStoryIndex === idx ? "text-white" : "text-zinc-700"
+                    currentStoryIndex === idx ? "text-white" : "text-zinc-700 dark:text-zinc-300"
                   }`}
                 >
                   {st.title}
@@ -198,12 +216,12 @@ export default function SpotAiLieScreen() {
         </View>
 
         {/* Story card */}
-        <View className="gap-5 rounded-3xl border border-zinc-200 bg-white p-5">
+        <View className="gap-5 rounded-3xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
           <View>
             <Text className="text-xs font-semibold uppercase tracking-wide text-amber-600">
               {story.topic} {story.decade ? `(${story.decade})` : ""}
             </Text>
-            <Text className="mt-1 text-2xl font-bold text-zinc-900">{story.title}</Text>
+            <Text className="mt-1 text-2xl font-bold text-zinc-900 dark:text-zinc-50">{story.title}</Text>
           </View>
 
           <View className="flex-row items-center gap-3">
@@ -226,7 +244,7 @@ export default function SpotAiLieScreen() {
             )}
             <Pressable
               onPress={resetRound}
-              className="rounded-2xl border border-zinc-200 p-3.5"
+              className="rounded-2xl border border-zinc-200 p-3.5 dark:border-zinc-700"
               accessibilityLabel="Reset audio"
             >
               <RotateCcw size={18} color="#71717a" />
@@ -235,7 +253,7 @@ export default function SpotAiLieScreen() {
 
           {/* Speed selector */}
           <View className="flex-row flex-wrap items-center gap-2">
-            <Text className="text-xs font-semibold text-zinc-500">Voice Speed:</Text>
+            <Text className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">Voice Speed:</Text>
             {[
               { rate: 0.75, label: "Slow 0.75x" },
               { rate: 0.85, label: "Gentle 0.85x" },
@@ -245,12 +263,12 @@ export default function SpotAiLieScreen() {
                 key={opt.rate}
                 onPress={() => setSpeechRate(opt.rate)}
                 className={`rounded-xl border px-3 py-1.5 ${
-                  speechRate === opt.rate ? "border-amber-500 bg-amber-500" : "bg-zinc-100"
+                  speechRate === opt.rate ? "border-amber-500 bg-amber-500" : "bg-zinc-100 dark:bg-zinc-800"
                 }`}
               >
                 <Text
                   className={`text-xs font-semibold ${
-                    speechRate === opt.rate ? "text-white" : "text-zinc-600"
+                    speechRate === opt.rate ? "text-white" : "text-zinc-600 dark:text-zinc-300"
                   }`}
                 >
                   {opt.label}
@@ -260,11 +278,11 @@ export default function SpotAiLieScreen() {
           </View>
 
           {/* Transcript */}
-          <View className="gap-2 rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
+          <View className="gap-2 rounded-2xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-800/60">
             <Text className="text-xs font-bold uppercase tracking-wider text-zinc-400">
               Live Story Transcript
             </Text>
-            <Text className="text-lg leading-relaxed text-zinc-800">
+            <Text className="text-lg leading-relaxed text-zinc-800 dark:text-zinc-200">
               {story.sentences.map((sent, idx) => {
                 const isActive = activeSentenceIndex === idx;
                 const isLieSentence = idx === story.lieSentenceIndex;
@@ -342,7 +360,7 @@ export default function SpotAiLieScreen() {
               </Text>
             </View>
 
-            <View className="gap-3 rounded-2xl border border-zinc-200 bg-white p-4">
+            <View className="gap-3 rounded-2xl border border-zinc-200 bg-white p-4 dark:border-zinc-700 dark:bg-zinc-900">
               <View className="flex-row items-center gap-2">
                 <Lightbulb size={16} color="#d97706" />
                 <Text className="text-xs font-bold uppercase tracking-wider text-amber-600">
@@ -381,10 +399,10 @@ export default function SpotAiLieScreen() {
         )}
 
         {/* Custom AI story */}
-        <View className="gap-3 rounded-3xl border border-zinc-200 bg-zinc-50 p-5">
+        <View className="gap-3 rounded-3xl border border-zinc-200 bg-zinc-50 p-5 dark:border-zinc-800 dark:bg-zinc-900">
           <View className="flex-row items-center gap-2">
             <Sparkles size={16} color="#0d9488" />
-            <Text className="text-sm font-bold text-zinc-800">
+            <Text className="text-sm font-bold text-zinc-800 dark:text-zinc-200">
               Generate a Custom AI Memory Story
             </Text>
           </View>
@@ -398,7 +416,7 @@ export default function SpotAiLieScreen() {
               onChangeText={setCustomTopic}
               placeholder="e.g. Vintage Automobiles in Detroit"
               placeholderTextColor="#a1a1aa"
-              className="flex-1 rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-sm text-zinc-900"
+              className="flex-1 rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-sm text-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
               onSubmitEditing={handleGenerateCustomStory}
             />
             <Pressable
@@ -412,6 +430,9 @@ export default function SpotAiLieScreen() {
               </Text>
             </Pressable>
           </View>
+          {generationError && (
+            <Text className="text-xs font-medium text-rose-600">{generationError}</Text>
+          )}
         </View>
       </ScrollView>
     </View>

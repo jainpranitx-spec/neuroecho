@@ -26,9 +26,14 @@ export default function EraGuesserScreen() {
   const [score, setScore] = useState(0);
 
   const confettiRef = useRef<ConfettiBurstHandle>(null);
+  // See SpotAiLieScreen for why a ref (not the `hasGuessed` state) guards
+  // re-entry: state reads are stale across two taps landing in one tick.
+  const hasGuessedRef = useRef(false);
 
   const handleSelectOption = (index: number) => {
-    if (hasGuessed) return;
+    if (hasGuessedRef.current) return;
+    hasGuessedRef.current = true;
+
     setSelectedOptionIndex(index);
     setHasGuessed(true);
 
@@ -53,7 +58,7 @@ export default function EraGuesserScreen() {
             summary: "Correctly identified anachronism",
           },
         })
-        .catch(() => {});
+        .catch((e) => console.warn("[EraGuesser] session save failed", e));
     } else {
       speakFeedback("Nice try! Review the historical context below.");
       api
@@ -69,12 +74,13 @@ export default function EraGuesserScreen() {
             summary: "Incorrect guess",
           },
         })
-        .catch(() => {});
+        .catch((e) => console.warn("[EraGuesser] session save failed", e));
     }
   };
 
   const handleNextItem = () => {
     setHasGuessed(false);
+    hasGuessedRef.current = false;
     setSelectedOptionIndex(null);
     setIsCorrect(null);
     setCurrentIndex((prev) => (prev + 1) % items.length);
@@ -145,7 +151,7 @@ export default function EraGuesserScreen() {
   };
 
   return (
-    <View className="flex-1 bg-zinc-50">
+    <View className="flex-1 bg-zinc-50 dark:bg-zinc-950">
       <ConfettiBurst ref={confettiRef} />
       <ScrollView contentContainerStyle={{ padding: 16, gap: 20 }}>
         <View className="flex-row items-center justify-between">
@@ -157,18 +163,18 @@ export default function EraGuesserScreen() {
           </View>
         </View>
 
-        <View className="gap-5 rounded-3xl border border-zinc-200 bg-white p-5">
+        <View className="gap-5 rounded-3xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
           <View>
             <Text className="text-xs font-bold uppercase tracking-wide text-blue-600">
               {currentItem.trueDecade}
             </Text>
-            <Text className="mt-1 text-2xl font-bold text-zinc-900">{currentItem.title}</Text>
+            <Text className="mt-1 text-2xl font-bold text-zinc-900 dark:text-zinc-50">{currentItem.title}</Text>
           </View>
 
           {renderDiorama()}
 
           <View className="items-center">
-            <Text className="text-center text-lg font-bold text-zinc-800">
+            <Text className="text-center text-lg font-bold text-zinc-800 dark:text-zinc-200">
               Which item is anachronistic and doesn&apos;t belong in the {currentItem.trueDecade}?
             </Text>
             <Text className="mt-1 text-xs text-zinc-400">Tap your guess below</Text>
@@ -178,7 +184,7 @@ export default function EraGuesserScreen() {
             {currentItem.options.map((opt, idx) => {
               const isSelected = selectedOptionIndex === idx;
               const isTargetCorrect = opt.isCorrect;
-              let cls = "border-zinc-200 bg-white";
+              let cls = "border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-900";
               if (hasGuessed && isTargetCorrect) cls = "border-emerald-500 bg-emerald-50";
               else if (hasGuessed && isSelected && !isTargetCorrect)
                 cls = "border-rose-500 bg-rose-50";
@@ -190,7 +196,7 @@ export default function EraGuesserScreen() {
                   disabled={hasGuessed}
                   className={`flex-row items-center justify-between rounded-2xl border px-6 py-4 ${cls}`}
                 >
-                  <Text className="flex-1 text-lg font-bold text-zinc-800">{opt.label}</Text>
+                  <Text className="flex-1 text-lg font-bold text-zinc-800 dark:text-zinc-200">{opt.label}</Text>
                   {hasGuessed && isTargetCorrect && <CheckCircle2 size={22} color="#059669" />}
                   {hasGuessed && isSelected && !isTargetCorrect && (
                     <XCircle size={22} color="#e11d48" />
@@ -219,7 +225,7 @@ export default function EraGuesserScreen() {
                   )}
                 </View>
                 <View className="flex-1">
-                  <Text className="text-xl font-bold text-zinc-900">
+                  <Text className="text-xl font-bold text-zinc-900 dark:text-zinc-50">
                     {isCorrect ? "Correct Identification!" : "Historical Insight"}
                   </Text>
                   <Text className="text-sm font-medium text-zinc-600">
@@ -232,14 +238,14 @@ export default function EraGuesserScreen() {
               </Text>
             </View>
 
-            <View className="gap-3 rounded-2xl border border-zinc-200 bg-white p-4">
+            <View className="gap-3 rounded-2xl border border-zinc-200 bg-white p-4 dark:border-zinc-700 dark:bg-zinc-900">
               <View className="flex-row items-center gap-2">
                 <Lightbulb size={16} color="#2563eb" />
                 <Text className="text-xs font-bold uppercase tracking-wider text-blue-600">
                   Historical Recall Detail
                 </Text>
               </View>
-              <Text className="text-base font-medium leading-relaxed text-zinc-800">
+              <Text className="text-base font-medium leading-relaxed text-zinc-800 dark:text-zinc-200">
                 {currentItem.correctExplanation}
               </Text>
             </View>

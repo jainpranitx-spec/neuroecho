@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { ScrollView, Text, View } from "react-native";
+import { Text, View } from "react-native";
+import TabScreenScroll from "../components/TabScreenScroll";
 import { Brain, TrendingUp } from "lucide-react-native";
 import { api, AnalyticsResponse } from "../lib/api";
 
@@ -33,33 +34,33 @@ export default function AnalyticsScreen() {
       .then((d) => {
         if (d?.scores) setData(d);
       })
-      .catch(() => {});
+      .catch((e) => console.warn("[AnalyticsScreen] request failed", e));
   }, []);
 
   return (
-    <ScrollView className="flex-1 bg-zinc-50" contentContainerStyle={{ padding: 16, gap: 20 }}>
-      <View className="border-b border-zinc-200 pb-4">
+    <TabScreenScroll className="flex-1 bg-zinc-50 dark:bg-zinc-950">
+      <View className="border-b border-zinc-200 pb-4 dark:border-zinc-800">
         <View className="self-start rounded-full border border-teal-200 bg-teal-50 px-3 py-1">
           <Text className="text-xs font-bold text-teal-600">
             Cognitive Report • Doctor & Caregiver View
           </Text>
         </View>
-        <Text className="mt-2 text-2xl font-extrabold text-zinc-900">
+        <Text className="mt-2 text-2xl font-extrabold text-zinc-900 dark:text-zinc-50">
           Cognitive Analytics & Progress
         </Text>
-        <Text className="mt-1 text-sm text-zinc-500">
+        <Text className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
           Breakdown of memory recall, visual processing, sequencing, and motor control.
         </Text>
       </View>
 
-      <View className="gap-6 rounded-3xl border border-zinc-200 bg-white p-6">
-        <View className="gap-4 border-b border-zinc-200 pb-6">
+      <View className="gap-6 rounded-3xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
+        <View className="gap-4 border-b border-zinc-200 pb-6 dark:border-zinc-800">
           <View>
             <Text className="text-xs font-bold uppercase tracking-wider text-teal-600">
               Overall NeuroEcho Index
             </Text>
             <View className="mt-1 flex-row items-baseline gap-2">
-              <Text className="text-5xl font-extrabold text-zinc-900">{data.overallIndex}</Text>
+              <Text className="text-5xl font-extrabold text-zinc-900 dark:text-zinc-50">{data.overallIndex}</Text>
               <Text className="text-xl font-semibold text-zinc-400">/ 100</Text>
             </View>
             <View className="mt-1 flex-row items-center gap-1.5">
@@ -70,12 +71,12 @@ export default function AnalyticsScreen() {
             </View>
           </View>
 
-          <View className="gap-2 rounded-2xl border border-teal-200 bg-teal-50 p-4">
+          <View className="gap-2 rounded-2xl border border-teal-200 bg-teal-50 p-4 dark:border-teal-900 dark:bg-teal-950/40">
             <View className="flex-row items-center gap-2">
               <Brain size={16} color="#0f766e" />
               <Text className="text-xs font-bold uppercase text-teal-700">AI Neural Summary</Text>
             </View>
-            <Text className="text-sm leading-relaxed text-zinc-800">
+            <Text className="text-sm leading-relaxed text-zinc-800 dark:text-zinc-200">
               {data.aiRecommendation}
             </Text>
           </View>
@@ -91,12 +92,12 @@ export default function AnalyticsScreen() {
               return (
                 <View key={d.key}>
                   <View className="mb-1 flex-row justify-between">
-                    <Text className="flex-1 text-sm font-semibold text-zinc-800">{d.label}</Text>
+                    <Text className="flex-1 text-sm font-semibold text-zinc-800 dark:text-zinc-200">{d.label}</Text>
                     <Text className="text-sm font-extrabold" style={{ color: d.color }}>
                       {val}%
                     </Text>
                   </View>
-                  <View className="h-3 overflow-hidden rounded-full bg-zinc-100">
+                  <View className="h-3 overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
                     <View className={`h-full rounded-full ${d.bg}`} style={{ width: `${val}%` }} />
                   </View>
                 </View>
@@ -105,12 +106,12 @@ export default function AnalyticsScreen() {
           </View>
         </View>
 
-        <View className="border-t border-zinc-200 pt-4">
+        <View className="border-t border-zinc-200 pt-4 dark:border-zinc-800">
           <Text className="text-xs text-zinc-400">
             {data.totalSessionsCompleted} sessions completed total
           </Text>
         </View>
       </View>
-    </ScrollView>
+    </TabScreenScroll>
   );
 }

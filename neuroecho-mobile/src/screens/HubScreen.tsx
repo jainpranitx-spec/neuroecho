@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
+import TabScreenScroll from "../components/TabScreenScroll";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import {
@@ -102,13 +103,13 @@ export default function HubScreen() {
       .then((data) => {
         if (data?.scores) setAnalytics(data);
       })
-      .catch(() => {});
+      .catch((e) => console.warn("[HubScreen] request failed", e));
   }, []);
 
   return (
-    <ScrollView className="flex-1 bg-zinc-50" contentContainerStyle={{ padding: 16, gap: 24 }}>
+    <TabScreenScroll className="flex-1 bg-zinc-50 dark:bg-zinc-950">
       {/* Hero */}
-      <View className="rounded-3xl border border-zinc-200 bg-white p-6">
+      <View className="rounded-3xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
         <View className="flex-row items-center gap-2 self-start rounded-full border border-teal-200 bg-teal-50 px-3 py-1">
           <Sparkles size={14} color="#0f766e" />
           <Text className="text-xs font-semibold text-teal-700">
@@ -116,10 +117,10 @@ export default function HubScreen() {
           </Text>
         </View>
 
-        <Text className="mt-4 text-3xl font-extrabold tracking-tight text-zinc-900">
+        <Text className="mt-4 text-3xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-50">
           Welcome to NeuroEcho
         </Text>
-        <Text className="mt-2 text-base leading-relaxed text-zinc-600">
+        <Text className="mt-2 text-base leading-relaxed text-zinc-600 dark:text-zinc-400">
           Personalized, calming cognitive workouts designed specifically for seniors. Choose a
           game below or follow today&apos;s AI recommendation.
         </Text>
@@ -132,7 +133,7 @@ export default function HubScreen() {
             <Text className="text-xs font-bold uppercase tracking-wider text-teal-700">
               AI Cognitive Insight Today
             </Text>
-            <Text className="mt-1 text-sm font-medium text-zinc-800">
+            <Text className="mt-1 text-sm font-medium text-zinc-800 dark:text-zinc-200">
               {analytics.aiRecommendation}
             </Text>
           </View>
@@ -172,9 +173,9 @@ export default function HubScreen() {
       {/* Games */}
       <View className="gap-4">
         <View className="flex-row items-center justify-between">
-          <Text className="text-2xl font-bold text-zinc-900">Cognitive Arcade Games</Text>
-          <View className="rounded-full bg-zinc-100 px-3 py-1">
-            <Text className="text-xs font-semibold text-zinc-600">4 Games Active</Text>
+          <Text className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">Cognitive Arcade Games</Text>
+          <View className="rounded-full bg-zinc-100 px-3 py-1 dark:bg-zinc-800">
+            <Text className="text-xs font-semibold text-zinc-600 dark:text-zinc-300">4 Games Active</Text>
           </View>
         </View>
 
@@ -184,7 +185,7 @@ export default function HubScreen() {
           return (
             <View
               key={game.id}
-              className="gap-4 rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm"
+              className="gap-4 rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900"
             >
               <View className="flex-row items-start justify-between gap-3">
                 <View className="flex-1 flex-row items-center gap-3">
@@ -195,15 +196,15 @@ export default function HubScreen() {
                     <Text className="text-xs font-bold uppercase tracking-wider text-zinc-400">
                       {game.badge}
                     </Text>
-                    <Text className="text-lg font-bold text-zinc-900">{game.title}</Text>
+                    <Text className="text-lg font-bold text-zinc-900 dark:text-zinc-50">{game.title}</Text>
                   </View>
                 </View>
-                <View className="shrink-0 rounded-xl bg-zinc-100 px-2.5 py-1">
-                  <Text className="text-xs font-extrabold text-zinc-700">Score: {score}%</Text>
+                <View className="shrink-0 rounded-xl bg-zinc-100 px-2.5 py-1 dark:bg-zinc-800">
+                  <Text className="text-xs font-extrabold text-zinc-700 dark:text-zinc-300">Score: {score}%</Text>
                 </View>
               </View>
 
-              <Text className="text-base leading-relaxed text-zinc-600">{game.description}</Text>
+              <Text className="text-base leading-relaxed text-zinc-600 dark:text-zinc-400">{game.description}</Text>
 
               <Pressable
                 onPress={() => navigation.navigate(game.screen)}
@@ -218,13 +219,13 @@ export default function HubScreen() {
       </View>
 
       {/* Tips */}
-      <View className="flex-row items-center justify-between gap-4 rounded-2xl border border-zinc-200 bg-zinc-100/60 p-5">
+      <View className="flex-row items-center justify-between gap-4 rounded-2xl border border-zinc-200 bg-zinc-100/60 p-5 dark:border-zinc-800 dark:bg-zinc-900/60">
         <View className="flex-1 flex-row items-center gap-3">
           <View className="rounded-xl bg-teal-600 p-2.5">
             <Zap size={18} color="white" />
           </View>
           <View className="flex-1">
-            <Text className="text-sm font-bold text-zinc-900">Accessibility Notice</Text>
+            <Text className="text-sm font-bold text-zinc-900 dark:text-zinc-100">Accessibility Notice</Text>
             <Text className="text-xs text-zinc-500">
               All buttons use large tap targets for tremor tolerance. Voice feedback can be
               adjusted in Settings.
@@ -232,11 +233,11 @@ export default function HubScreen() {
           </View>
         </View>
       </View>
-    </ScrollView>
+    </TabScreenScroll>
   );
 }
 
-function ScoreCard({
+const ScoreCard = React.memo(function ScoreCard({
   label,
   value,
   suffix,
@@ -252,7 +253,7 @@ function ScoreCard({
   icon?: React.ReactNode;
 }) {
   return (
-    <View className="min-w-[46%] flex-1 justify-between rounded-2xl border border-zinc-200 bg-white p-4">
+    <View className="min-w-[46%] flex-1 justify-between rounded-2xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
       <Text className="text-xs font-semibold uppercase tracking-wide text-zinc-500">{label}</Text>
       <View className="mt-2 flex-row items-baseline gap-1">
         <Text className={`text-3xl font-extrabold ${color}`}>{value}</Text>
@@ -264,4 +265,4 @@ function ScoreCard({
       </View>
     </View>
   );
-}
+});

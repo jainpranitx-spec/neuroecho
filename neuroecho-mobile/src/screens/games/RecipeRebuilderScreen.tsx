@@ -27,9 +27,12 @@ export default function RecipeRebuilderScreen() {
   const [incorrectIndexes, setIncorrectIndexes] = useState<number[]>([]);
 
   const confettiRef = useRef<ConfettiBurstHandle>(null);
+  // See SpotAiLieScreen for why a ref (not the `hasVerified` state) guards
+  // re-entry: state reads are stale across two taps landing in one tick.
+  const hasVerifiedRef = useRef(false);
 
   const moveStep = (fromIndex: number, toIndex: number) => {
-    if (toIndex < 0 || toIndex >= steps.length || hasVerified) return;
+    if (toIndex < 0 || toIndex >= steps.length || hasVerifiedRef.current) return;
     const newSteps = [...steps];
     const [moved] = newSteps.splice(fromIndex, 1);
     newSteps.splice(toIndex, 0, moved);
@@ -37,6 +40,8 @@ export default function RecipeRebuilderScreen() {
   };
 
   const handleVerifySequence = () => {
+    if (hasVerifiedRef.current) return;
+    hasVerifiedRef.current = true;
     setHasVerified(true);
 
     const wrongSteps: number[] = [];
@@ -64,7 +69,7 @@ export default function RecipeRebuilderScreen() {
             summary: "Successfully rebuilt 5-step recipe sequence",
           },
         })
-        .catch(() => {});
+        .catch((e) => console.warn("[RecipeRebuilder] session save failed", e));
     } else {
       speakFeedback("Almost there! Review the steps highlighted in red.");
       const partialScore = Math.max(20, 100 - wrongSteps.length * 20);
@@ -80,7 +85,7 @@ export default function RecipeRebuilderScreen() {
             summary: `Misplaced ${wrongSteps.length} steps`,
           },
         })
-        .catch(() => {});
+        .catch((e) => console.warn("[RecipeRebuilder] session save failed", e));
     }
   };
 
@@ -89,6 +94,7 @@ export default function RecipeRebuilderScreen() {
     setCurrentRecipeIdx(nextIdx);
     setSteps(recipes[nextIdx].scrambledSteps);
     setHasVerified(false);
+    hasVerifiedRef.current = false;
     setIsCorrect(null);
     setIncorrectIndexes([]);
   };
@@ -96,11 +102,12 @@ export default function RecipeRebuilderScreen() {
   const reshuffle = () => {
     setSteps([...currentRecipe.scrambledSteps].sort(() => Math.random() - 0.5));
     setHasVerified(false);
+    hasVerifiedRef.current = false;
     setIsCorrect(null);
   };
 
   return (
-    <View className="flex-1 bg-zinc-50">
+    <View className="flex-1 bg-zinc-50 dark:bg-zinc-950">
       <ConfettiBurst ref={confettiRef} />
       <ScrollView contentContainerStyle={{ padding: 16, gap: 20 }}>
         <View className="flex-row items-center justify-end">
@@ -109,7 +116,7 @@ export default function RecipeRebuilderScreen() {
           </View>
         </View>
 
-        <View className="gap-5 rounded-3xl border border-zinc-200 bg-white p-5">
+        <View className="gap-5 rounded-3xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
           <View className="flex-row items-center justify-between">
             <View className="flex-1 flex-row items-center gap-3">
               <View className="rounded-2xl bg-emerald-100 p-3">
@@ -119,12 +126,12 @@ export default function RecipeRebuilderScreen() {
                 <Text className="text-xs font-bold uppercase tracking-wide text-emerald-600">
                   {currentRecipe.category} • {currentRecipe.estimatedTime}
                 </Text>
-                <Text className="text-xl font-bold text-zinc-900">{currentRecipe.title}</Text>
+                <Text className="text-xl font-bold text-zinc-900 dark:text-zinc-50">{currentRecipe.title}</Text>
               </View>
             </View>
             <Pressable
               onPress={reshuffle}
-              className="rounded-2xl border border-zinc-200 p-3"
+              className="rounded-2xl border border-zinc-200 p-3 dark:border-zinc-700"
               accessibilityLabel="Reshuffle steps"
             >
               <RotateCcw size={18} color="#71717a" />
@@ -135,7 +142,7 @@ export default function RecipeRebuilderScreen() {
             {steps.map((step, idx) => {
               const isMisplaced = hasVerified && incorrectIndexes.includes(idx);
               const isVerifiedCorrect = hasVerified && !incorrectIndexes.includes(idx);
-              let cls = "border-zinc-200 bg-zinc-50";
+              let cls = "border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800/60";
               if (isVerifiedCorrect) cls = "border-emerald-500 bg-emerald-50";
               else if (isMisplaced) cls = "border-rose-500 bg-rose-50";
 
@@ -145,11 +152,11 @@ export default function RecipeRebuilderScreen() {
                   className={`flex-row items-center justify-between gap-3 rounded-2xl border p-4 ${cls}`}
                 >
                   <View className="flex-1 flex-row items-center gap-3">
-                    <View className="h-9 w-9 items-center justify-center rounded-2xl bg-zinc-200">
-                      <Text className="text-base font-extrabold text-zinc-800">{idx + 1}</Text>
+                    <View className="h-9 w-9 items-center justify-center rounded-2xl bg-zinc-200 dark:bg-zinc-700">
+                      <Text className="text-base font-extrabold text-zinc-800 dark:text-zinc-200">{idx + 1}</Text>
                     </View>
                     <View className="flex-1">
-                      <Text className="text-base font-semibold leading-snug text-zinc-800">
+                      <Text className="text-base font-semibold leading-snug text-zinc-800 dark:text-zinc-200">
                         {step.text}
                       </Text>
                       {step.tip && (
@@ -163,14 +170,14 @@ export default function RecipeRebuilderScreen() {
                       <Pressable
                         onPress={() => moveStep(idx, idx - 1)}
                         disabled={idx === 0}
-                        className="rounded-xl border border-zinc-200 bg-white p-2.5 disabled:opacity-30"
+                        className="rounded-xl border border-zinc-200 bg-white p-2.5 disabled:opacity-30 dark:border-zinc-700 dark:bg-zinc-900"
                       >
                         <ArrowUp size={18} color="#3f3f46" />
                       </Pressable>
                       <Pressable
                         onPress={() => moveStep(idx, idx + 1)}
                         disabled={idx === steps.length - 1}
-                        className="rounded-xl border border-zinc-200 bg-white p-2.5 disabled:opacity-30"
+                        className="rounded-xl border border-zinc-200 bg-white p-2.5 disabled:opacity-30 dark:border-zinc-700 dark:bg-zinc-900"
                       >
                         <ArrowDown size={18} color="#3f3f46" />
                       </Pressable>
@@ -212,7 +219,7 @@ export default function RecipeRebuilderScreen() {
                   )}
                 </View>
                 <View className="flex-1">
-                  <Text className="text-xl font-bold text-zinc-900">
+                  <Text className="text-xl font-bold text-zinc-900 dark:text-zinc-50">
                     {isCorrect ? "Perfect Culinary Order!" : "Sequence Needs Adjustment"}
                   </Text>
                   <Text className="text-sm font-medium text-zinc-600">
@@ -229,8 +236,11 @@ export default function RecipeRebuilderScreen() {
 
             <View className="flex-row items-center justify-between gap-3">
               <Pressable
-                onPress={() => setHasVerified(false)}
-                className="flex-row items-center gap-2 rounded-2xl border border-zinc-300 bg-white px-5 py-3"
+                onPress={() => {
+                  setHasVerified(false);
+                  hasVerifiedRef.current = false;
+                }}
+                className="flex-row items-center gap-2 rounded-2xl border border-zinc-300 bg-white px-5 py-3 dark:border-zinc-700 dark:bg-zinc-900"
               >
                 <RotateCcw size={16} color="#3f3f46" />
                 <Text className="text-sm font-semibold text-zinc-700">Adjust Steps</Text>

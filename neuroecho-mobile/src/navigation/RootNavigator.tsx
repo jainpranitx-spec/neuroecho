@@ -5,9 +5,22 @@ import SpotAiLieScreen from "../screens/games/SpotAiLieScreen";
 import EraGuesserScreen from "../screens/games/EraGuesserScreen";
 import RecipeRebuilderScreen from "../screens/games/RecipeRebuilderScreen";
 import MotionMatchScreen from "../screens/games/MotionMatchScreen";
+import ErrorBoundary from "../components/ErrorBoundary";
 import { RootStackParamList } from "./types";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
+
+// A game crashing shouldn't take the whole app down with it — each gets its
+// own boundary so "Try Again" just re-mounts that one game.
+function withGameBoundary(Screen: React.ComponentType, label: string) {
+  return function Wrapped() {
+    return (
+      <ErrorBoundary label={label}>
+        <Screen />
+      </ErrorBoundary>
+    );
+  };
+}
 
 export default function RootNavigator() {
   return (
@@ -15,22 +28,22 @@ export default function RootNavigator() {
       <Stack.Screen name="Main" component={MainTabs} options={{ headerShown: false }} />
       <Stack.Screen
         name="SpotAiLie"
-        component={SpotAiLieScreen}
+        component={withGameBoundary(SpotAiLieScreen, "Spot the AI Lie")}
         options={{ title: "Spot the AI Lie", headerBackTitle: "Hub" }}
       />
       <Stack.Screen
         name="EraGuesser"
-        component={EraGuesserScreen}
+        component={withGameBoundary(EraGuesserScreen, "Era Guesser")}
         options={{ title: "Era Guesser", headerBackTitle: "Hub" }}
       />
       <Stack.Screen
         name="RecipeRebuilder"
-        component={RecipeRebuilderScreen}
+        component={withGameBoundary(RecipeRebuilderScreen, "Recipe Rebuilder")}
         options={{ title: "Recipe Rebuilder", headerBackTitle: "Hub" }}
       />
       <Stack.Screen
         name="MotionMatch"
-        component={MotionMatchScreen}
+        component={withGameBoundary(MotionMatchScreen, "Motion Match")}
         options={{ title: "Motion Match", headerBackTitle: "Hub" }}
       />
     </Stack.Navigator>
