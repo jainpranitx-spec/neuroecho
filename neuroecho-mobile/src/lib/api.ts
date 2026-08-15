@@ -50,6 +50,14 @@ function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+// Helper to strip any unexpected LaTeX math syntax into plain readable text
+function cleanMathFormatting(text: string): string {
+  return text
+    .replace(/\$\$(.*?)\$\$/g, "$1")
+    .replace(/\$(.*?)\$/g, "$1")
+    .replace(/\\frac\{([^}]+)\}\{([^}]+)\}/g, "$1 / $2");
+}
+
 async function fetchOnce<T>(path: string, options?: RequestInit, timeoutMs = DEFAULT_TIMEOUT_MS): Promise<T> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -140,12 +148,17 @@ export const api = {
 
     try {
       const genAI = new GoogleGenerativeAI(apiKey);
-      const model = genAI.getGenerativeModel({ model: "gemini-3.6-flash" });
+      const model = genAI.getGenerativeModel({
+        model: "gemini-3.6-flash",
+        systemInstruction:
+          "Format all mathematical equations using simple plain text (e.g., y = 4 / 2). Never use LaTeX formatting, dollar signs ($), or LaTeX commands like \\frac.",
+      });
       const result = await model.generateContent(query);
-      const text = result.response.text();
+      const rawText = result.response.text();
+      const cleanedAnswer = cleanMathFormatting(rawText);
 
       return {
-        answer: text,
+        answer: cleanedAnswer,
         sources: ["Google Gemini AI"],
       };
     } catch (error) {

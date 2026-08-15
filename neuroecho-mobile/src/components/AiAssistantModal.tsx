@@ -1,9 +1,11 @@
 import React, { useState } from "react";
+import Markdown from "react-native-markdown-display";
 import {
   ActivityIndicator,
   Modal,
   Pressable,
   ScrollView,
+  StyleSheet,
   Text,
   TextInput,
   View,
@@ -101,7 +103,11 @@ export default function AiAssistantModal() {
                   NeuroEcho Cognitive Answer
                 </Text>
               </View>
-              <Text className="text-base leading-relaxed text-zinc-800 dark:text-zinc-200">{response.answer}</Text>
+              
+              <Markdown style={markdownStyles}>
+                {response.answer}
+              </Markdown>
+
               {response.sources.length > 0 && (
                 <View className="mt-3 flex-row flex-wrap gap-2 border-t border-teal-200/40 pt-3">
                   {response.sources.map((s, idx) => (
@@ -121,3 +127,32 @@ export default function AiAssistantModal() {
     </Modal>
   );
 }
+
+const markdownStyles = StyleSheet.create({
+  body: {
+    fontSize: 15,
+    lineHeight: 22,
+    color: '#27272a',
+  },
+  heading1: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginVertical: 6,
+    color: '#0f766e',
+  },
+  heading2: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginVertical: 4,
+    color: '#111827',
+  },
+  bullet_list: {
+    marginVertical: 4,
+  },
+  list_item: {
+    marginVertical: 2,
+  },
+  strong: {
+    fontWeight: 'bold',
+  },
+});
