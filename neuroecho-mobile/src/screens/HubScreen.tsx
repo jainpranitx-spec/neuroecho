@@ -3,7 +3,7 @@ import { Pressable, Text, View } from "react-native";
 import TabScreenScroll from "../components/TabScreenScroll";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { Clock, Hand, ListOrdered, Mic, TrendingUp } from "lucide-react-native";
+import { Clock, Hand, ListOrdered, Mic, Sparkles, TrendingUp } from "lucide-react-native";
 import { RootStackParamList } from "../navigation/types";
 import { api, AnalyticsResponse } from "../lib/api";
 import { useLanguage } from "../context/LanguageContext";
@@ -88,6 +88,21 @@ export default function HubScreen() {
             </View>
           </View>
           <TrendingUp size={32} color="#0f766e" />
+        </View>
+
+        <View className="mt-3 flex-row items-start gap-2.5 rounded-2xl bg-zinc-50 p-3.5 dark:bg-zinc-800/60">
+          <Sparkles size={16} color="#0d9488" style={{ marginTop: 2 }} />
+          <View className="flex-1">
+            <Text className="text-[11px] font-bold uppercase tracking-wider text-teal-600">
+              {t("hub_ai_insight_label")}
+            </Text>
+            <Text
+              className="mt-0.5 text-sm leading-relaxed text-zinc-600 dark:text-zinc-400"
+              numberOfLines={2}
+            >
+              {analytics.aiRecommendation}
+            </Text>
+          </View>
         </View>
       </View>
 
