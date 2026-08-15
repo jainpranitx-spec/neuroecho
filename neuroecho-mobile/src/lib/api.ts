@@ -166,6 +166,13 @@ export const api = {
 
   getSessions: () => apiFetch<GameSession[]>("/api/sessions"),
 
+  requestGame: (prompt: string) =>
+    apiFetch<{ id: string; status: "queued" }>("/api/games/request", {
+      method: "POST",
+      body: JSON.stringify({ prompt }),
+      timeoutMs: 20_000,
+    }),
+
   saveSession: (session: SaveSessionInput) =>
     apiFetch<{ session: GameSession; xpGained: number }>("/api/sessions", {
       method: "POST",

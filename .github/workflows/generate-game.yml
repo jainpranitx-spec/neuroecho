@@ -1,0 +1,77 @@
+name: Generate requested game
+
+on:
+  repository_dispatch:
+    types: [game_requested]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: generate-game-${{ github.event.client_payload.id }}
+  cancel-in-progress: false
+
+jobs:
+  generate-and-review:
+    if: github.event.client_payload.id != '' && github.event.client_payload.prompt != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out the release branch
+        uses: actions/checkout@v4
+        with:
+          ref: latest
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: neuroecho-mobile/package-lock.json
+
+      - name: Install mobile dependencies
+        working-directory: neuroecho-mobile
+        run: npm ci
+
+      - name: Generate validated game definition
+        working-directory: neuroecho-mobile
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          REQUEST_ID: ${{ github.event.client_payload.id }}
+          GAME_IDEA: ${{ github.event.client_payload.prompt }}
+        run: node scripts/generate-game.mjs "$REQUEST_ID" "$GAME_IDEA"
+
+      - name: Type check generated game
+        working-directory: neuroecho-mobile
+        run: npm run typecheck
+
+      - name: Bundle generated game for Android
+        working-directory: neuroecho-mobile
+        run: npx expo export --platform android --output-dir /tmp/neuroecho-generated-game
+
+      - name: Create a review branch
+        id: branch
+        env:
+          REQUEST_ID: ${{ github.event.client_payload.id }}
+        run: |
+          branch="generated-game/${REQUEST_ID}"
+          echo "name=$branch" >> "$GITHUB_OUTPUT"
+          git switch -c "$branch"
+          git config user.name "neuroecho-game-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add neuroecho-mobile/src/lib/generatedGames.ts
+          git commit -m "Add requested generated game ${REQUEST_ID}"
+          git push origin "$branch"
+
+      - name: Open pull request for human review
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BRANCH: ${{ steps.branch.outputs.name }}
+          REQUEST_ID: ${{ github.event.client_payload.id }}
+        run: |
+          gh pr create \
+            --base latest \
+            --head "$BRANCH" \
+            --title "Add requested generated game ${REQUEST_ID:0:8}" \
+            --body "## Generated game\n\nRequest ID: \`${REQUEST_ID}\`\n\nThe original free-text request is intentionally omitted from the pull request description. Review the generated game definition itself.\n\n## Safety and validation\n- Generated as declarative game data; no generated executable code runs in the app\n- TypeScript typecheck passed\n- Android Expo bundle passed\n- Requires human review before merge and release\n\nOnly the requesting device lists this game because the request ID is stored locally."
