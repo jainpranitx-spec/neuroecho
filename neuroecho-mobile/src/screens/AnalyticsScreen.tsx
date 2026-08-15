@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Text, View } from "react-native";
+import Text from "../components/AccessibleText";
+import { View } from "react-native";
 import TabScreenScroll from "../components/TabScreenScroll";
 import { Brain, TrendingUp } from "lucide-react-native";
 import { api, AnalyticsResponse } from "../lib/api";

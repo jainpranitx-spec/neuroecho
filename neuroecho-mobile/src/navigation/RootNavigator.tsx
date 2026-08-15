@@ -22,9 +22,15 @@ function withGameBoundary(Screen: React.ComponentType, label: string) {
   };
 }
 
-export default function RootNavigator() {
+export default function RootNavigator({ reduceMotion = false }: { reduceMotion?: boolean }) {
   return (
-    <Stack.Navigator screenOptions={{ headerTitleStyle: { fontWeight: "800" } }}>
+    <Stack.Navigator
+      screenOptions={{
+        headerTitleStyle: { fontWeight: "800", fontSize: 20 },
+        headerBackTitleStyle: { fontSize: 17 },
+        animation: reduceMotion ? "none" : "default",
+      }}
+    >
       <Stack.Screen name="Main" component={MainTabs} options={{ headerShown: false }} />
       <Stack.Screen
         name="SpotAiLie"

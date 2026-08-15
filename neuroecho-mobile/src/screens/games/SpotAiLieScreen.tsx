@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import Text from "../../components/AccessibleText";
+import { Pressable, ScrollView, TextInput, View } from "react-native";
 import { registerScreenActions, clearScreenActions } from "../../lib/screenActions";
 import {
   AlertTriangle,

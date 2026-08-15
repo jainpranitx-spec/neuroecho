@@ -1,5 +1,6 @@
 import React from "react";
-import { Pressable, Text, View } from "react-native";
+import Text from "./AccessibleText";
+import { Pressable, View } from "react-native";
 import { Info, Volume2 } from "lucide-react-native";
 import { speakFeedback } from "../lib/speech";
 

@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Modal, Pressable, ScrollView, Text, View } from "react-native";
+import Text from "./AccessibleText";
+import { ActivityIndicator, Modal, Pressable, ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Mic, Square, X } from "lucide-react-native";
 import {
@@ -16,6 +17,7 @@ import { setRecordingAudioMode, setPlaybackAudioMode, VOICE_RECORDING_OPTIONS } 
 import { useAudioOutput } from "../context/AudioOutputContext";
 import { triggerScreenStart } from "../lib/screenActions";
 import { useLanguage } from "../context/LanguageContext";
+import { useAccessibility } from "../context/AccessibilityContext";
 
 const TAB_SCREENS = new Set(["Hub", "Analytics", "Settings"]);
 
@@ -28,6 +30,7 @@ export default function AiCompanion() {
   const insets = useSafeAreaInsets();
   const { output } = useAudioOutput();
   const { language, t } = useLanguage();
+  const { reduceMotion } = useAccessibility();
   const [isOpen, setIsOpen] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [isThinking, setIsThinking] = useState(false);
@@ -176,13 +179,15 @@ export default function AiCompanion() {
       <Pressable
         onPress={openCompanion}
         accessibilityLabel={t("companion_fab_label")}
-        className="absolute right-5 h-16 w-16 items-center justify-center rounded-full bg-teal-600 shadow-lg"
+        accessibilityRole="button"
+        accessibilityHint={t("companion_tap_to_speak")}
+        className="absolute right-5 h-18 w-18 items-center justify-center rounded-full border-2 border-white bg-teal-700 shadow-lg"
         style={{ bottom: insets.bottom + (tabBarVisible ? 92 : 24) }}
       >
         <Mic size={28} color="white" />
       </Pressable>
 
-      <Modal visible={isOpen} animationType="slide" onRequestClose={closeCompanion}>
+      <Modal visible={isOpen} animationType={reduceMotion ? "none" : "slide"} onRequestClose={closeCompanion}>
         <View className="flex-1 bg-zinc-50 dark:bg-zinc-950" style={{ paddingTop: insets.top }}>
           <View className="flex-row items-center justify-between border-b border-zinc-200 px-5 py-4 dark:border-zinc-800">
             <View>

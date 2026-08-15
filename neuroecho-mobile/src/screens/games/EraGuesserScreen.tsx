@@ -1,5 +1,6 @@
 import React, { useRef, useState } from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import Text from "../../components/AccessibleText";
+import { Pressable, ScrollView, View } from "react-native";
 import {
   ArrowRight,
   CheckCircle2,

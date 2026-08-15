@@ -1,11 +1,11 @@
 import React, { useEffect, useMemo, useState } from "react";
+import Text from "./AccessibleText";
 import Markdown from "react-native-markdown-display";
 import {
   ActivityIndicator,
   Modal,
   Pressable,
   ScrollView,
-  Text,
   TextInput,
   View,
 } from "react-native";
@@ -15,11 +15,13 @@ import { api } from "../lib/api";
 import { useAsyncGuard } from "../lib/useAsyncGuard";
 import { useTheme } from "../context/ThemeContext";
 import { useLanguage } from "../context/LanguageContext";
+import { useAccessibility } from "../context/AccessibilityContext";
 
 export default function AiAssistantModal() {
   const { isOpen, close } = useAiModal();
   const { isDark } = useTheme();
   const { language, t } = useLanguage();
+  const { reduceMotion } = useAccessibility();
   const markdownStyles = useMemo(() => createMarkdownStyles(isDark), [isDark]);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
@@ -53,7 +55,7 @@ export default function AiAssistantModal() {
     });
 
   return (
-    <Modal visible={isOpen} animationType="slide" transparent onRequestClose={close}>
+    <Modal visible={isOpen} animationType={reduceMotion ? "none" : "slide"} transparent onRequestClose={close}>
       <View className="flex-1 justify-end bg-black/50">
         <View className="max-h-[85%] rounded-t-3xl bg-white p-6 dark:bg-zinc-900">
           <View className="flex-row items-center justify-between border-b border-zinc-200 pb-4 dark:border-zinc-700">
