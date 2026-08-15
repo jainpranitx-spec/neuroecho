@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { CameraOff, CheckCircle2, Play, XCircle } from "lucide-react-native";
@@ -6,6 +6,7 @@ import { MOTION_TARGETS } from "../../lib/gameData";
 import { speakFeedback } from "../../lib/speech";
 import { api } from "../../lib/api";
 import ConfettiBurst, { ConfettiBurstHandle } from "../../components/ConfettiBurst";
+import { registerScreenActions, clearScreenActions } from "../../lib/screenActions";
 
 export default function MotionMatchScreen() {
   const [targetList] = useState(MOTION_TARGETS);
@@ -33,6 +34,15 @@ export default function MotionMatchScreen() {
   const actionLockRef = useRef(false);
   const startGameLockRef = useRef(false);
 
+  // Registered once so the AI companion can trigger this via voice command
+  // ("open Motion Match and start it") — see SpotAiLieScreen for the same pattern.
+  const startGameRef = useRef<() => void>(() => {});
+  useEffect(() => {
+    const handlers = { start: () => startGameRef.current() };
+    registerScreenActions(handlers);
+    return () => clearScreenActions(handlers);
+  }, []);
+
   const handleStartGame = async () => {
     if (startGameLockRef.current) return;
     startGameLockRef.current = true;
@@ -58,6 +68,7 @@ export default function MotionMatchScreen() {
       startGameLockRef.current = false;
     }
   };
+  startGameRef.current = handleStartGame;
 
   const handleGestureAction = (actionTaken: "left" | "right") => {
     if (!isPlaying || actionLockRef.current) return;

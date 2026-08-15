@@ -1,13 +1,20 @@
 import { NextResponse } from "next/server";
 import { GoogleGenAI } from "@google/genai";
 
+const LANGUAGE_NAMES: Record<string, string> = {
+  en: "English",
+  hi: "Hindi (हिन्दी, in Devanagari script)",
+};
+
 export async function POST(req: Request) {
   try {
-    const { query } = await req.json();
+    const { query, language } = await req.json();
 
     if (!query || typeof query !== "string") {
       return NextResponse.json({ error: "Query parameter required" }, { status: 400 });
     }
+
+    const languageName = LANGUAGE_NAMES[language] || LANGUAGE_NAMES.en;
 
     const apiKey = process.env.GEMINI_API_KEY;
 
@@ -19,7 +26,7 @@ export async function POST(req: Request) {
           model: "gemini-3.6-flash",
           contents: query,
           config: {
-            systemInstruction: "You are NeuroEcho AI, a warm, clear, encouraging cognitive assistant for older adults. Keep responses concise, high-contrast, easy to read, with 2-3 clear key bullet points and a warm encouraging closing tone.",
+            systemInstruction: `You are NeuroEcho AI, a warm, clear, encouraging cognitive assistant for older adults. Keep responses concise, high-contrast, easy to read, with 2-3 clear key bullet points and a warm encouraging closing tone. Respond entirely in ${languageName}, regardless of what language the question was asked in.`,
           },
         });
 

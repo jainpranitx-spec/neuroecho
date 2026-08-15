@@ -1,5 +1,5 @@
 import { GameSession, GameType, StoryLieItem, UserProfile } from "./types";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { AppLanguage } from "./i18n";
 
 // Base URL for backend calls (fallback to localhost if env isn't set)
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:3000";
@@ -46,16 +46,25 @@ export interface AskAiResponse {
   sources: string[];
 }
 
-function sleep(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+export interface CompanionTurn {
+  role: "user" | "assistant";
+  text: string;
 }
 
-// Helper to strip any unexpected LaTeX math syntax into plain readable text
-function cleanMathFormatting(text: string): string {
-  return text
-    .replace(/\$\$(.*?)\$\$/g, "$1")
-    .replace(/\$(.*?)\$/g, "$1")
-    .replace(/\\frac\{([^}]+)\}\{([^}]+)\}/g, "$1 / $2");
+export interface CompanionAction {
+  type: "navigate_game" | "navigate_screen" | "none";
+  target?: string;
+  startAfterNavigate?: boolean;
+}
+
+export interface CompanionResponse {
+  transcript: string;
+  reply: string;
+  action: CompanionAction;
+}
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 async function fetchOnce<T>(path: string, options?: RequestInit, timeoutMs = DEFAULT_TIMEOUT_MS): Promise<T> {
@@ -136,34 +145,18 @@ export const api = {
       timeoutMs: 30_000,
     }),
 
-  // Direct client-side Gemini call
-  askAi: async (query: string): Promise<AskAiResponse> => {
-    const apiKey = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
-    if (!apiKey) {
-      return {
-        answer: "Gemini API key is missing. Add EXPO_PUBLIC_GEMINI_API_KEY to your .env.local file.",
-        sources: [],
-      };
-    }
+  askAi: (query: string, language: AppLanguage = "en") =>
+    apiFetch<AskAiResponse>("/api/ai/query", {
+      method: "POST",
+      body: JSON.stringify({ query, language }),
+      idempotent: true,
+      timeoutMs: 30_000,
+    }),
 
-    try {
-      const genAI = new GoogleGenerativeAI(apiKey);
-      const model = genAI.getGenerativeModel({
-        model: "gemini-3.6-flash",
-        systemInstruction:
-          "Format all mathematical equations using simple plain text (e.g., y = 4 / 2). Never use LaTeX formatting, dollar signs ($), or LaTeX commands like \\frac.",
-      });
-      const result = await model.generateContent(query);
-      const rawText = result.response.text();
-      const cleanedAnswer = cleanMathFormatting(rawText);
-
-      return {
-        answer: cleanedAnswer,
-        sources: ["Google Gemini AI"],
-      };
-    } catch (error) {
-      console.error("Gemini Direct Error:", error);
-      throw new ApiError("Failed to reach Gemini AI service");
-    }
-  },
+  askCompanion: (audioBase64: string, mimeType: string, history: CompanionTurn[], language: AppLanguage = "en") =>
+    apiFetch<CompanionResponse>("/api/ai/companion", {
+      method: "POST",
+      body: JSON.stringify({ audioBase64, mimeType, history, language }),
+      timeoutMs: 30_000,
+    }),
 };

@@ -11,7 +11,8 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.neuroecho.arcade",
       "infoPlist": {
-        "NSCameraUsageDescription": "NeuroEcho uses the camera for the Motion Match dual-task game stage."
+        "NSCameraUsageDescription": "NeuroEcho uses the camera for the Motion Match dual-task game stage.",
+        "NSMicrophoneUsageDescription": "NeuroEcho uses the microphone so you can talk to your AI companion."
       }
     },
     "android": {
@@ -24,7 +25,10 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "permissions": ["CAMERA"]
+      "permissions": [
+        "CAMERA",
+        "RECORD_AUDIO"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -34,6 +38,12 @@
         "expo-camera",
         {
           "cameraPermission": "NeuroEcho uses the camera for the Motion Match dual-task game stage."
+        }
+      ],
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "NeuroEcho uses the microphone so you can talk to your AI companion."
         }
       ]
     ]

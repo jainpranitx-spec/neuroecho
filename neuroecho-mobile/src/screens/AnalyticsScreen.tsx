@@ -3,6 +3,8 @@ import { Text, View } from "react-native";
 import TabScreenScroll from "../components/TabScreenScroll";
 import { Brain, TrendingUp } from "lucide-react-native";
 import { api, AnalyticsResponse } from "../lib/api";
+import { useLanguage } from "../context/LanguageContext";
+import { TranslationKey } from "../lib/i18n";
 
 const DEFAULT_DATA: AnalyticsResponse = {
   overallIndex: 88,
@@ -18,14 +20,15 @@ const DEFAULT_DATA: AnalyticsResponse = {
   recentSessions: [],
 };
 
-const DOMAINS = [
-  { key: "memoryAudit" as const, label: "1. Spot the AI Lie (Auditory Memory)", color: "#d97706", bg: "bg-amber-500" },
-  { key: "visualRecognition" as const, label: "2. Era Guesser (Visual Semantic)", color: "#2563eb", bg: "bg-blue-500" },
-  { key: "logicalSequencing" as const, label: "3. Recipe Rebuilder (Executive Sequencing)", color: "#059669", bg: "bg-emerald-500" },
-  { key: "motorCoordination" as const, label: "4. Motion Match (Dual-Task Motor)", color: "#0d9488", bg: "bg-teal-600" },
+const DOMAINS: { key: keyof AnalyticsResponse["scores"]; labelKey: TranslationKey; color: string; bg: string }[] = [
+  { key: "memoryAudit", labelKey: "domain_memory_audit", color: "#d97706", bg: "bg-amber-500" },
+  { key: "visualRecognition", labelKey: "domain_visual_recognition", color: "#2563eb", bg: "bg-blue-500" },
+  { key: "logicalSequencing", labelKey: "domain_logical_sequencing", color: "#059669", bg: "bg-emerald-500" },
+  { key: "motorCoordination", labelKey: "domain_motor_coordination", color: "#0d9488", bg: "bg-teal-600" },
 ];
 
 export default function AnalyticsScreen() {
+  const { t } = useLanguage();
   const [data, setData] = useState<AnalyticsResponse>(DEFAULT_DATA);
 
   useEffect(() => {
@@ -42,14 +45,14 @@ export default function AnalyticsScreen() {
       <View className="border-b border-zinc-200 pb-4 dark:border-zinc-800">
         <View className="self-start rounded-full border border-teal-200 bg-teal-50 px-3 py-1">
           <Text className="text-xs font-bold text-teal-600">
-            Cognitive Report • Doctor & Caregiver View
+            {t("analytics_badge")}
           </Text>
         </View>
         <Text className="mt-2 text-2xl font-extrabold text-zinc-900 dark:text-zinc-50">
-          Cognitive Analytics & Progress
+          {t("analytics_title")}
         </Text>
         <Text className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-          Breakdown of memory recall, visual processing, sequencing, and motor control.
+          {t("analytics_subtitle")}
         </Text>
       </View>
 
@@ -57,7 +60,7 @@ export default function AnalyticsScreen() {
         <View className="gap-4 border-b border-zinc-200 pb-6 dark:border-zinc-800">
           <View>
             <Text className="text-xs font-bold uppercase tracking-wider text-teal-600">
-              Overall NeuroEcho Index
+              {t("analytics_overall_index")}
             </Text>
             <View className="mt-1 flex-row items-baseline gap-2">
               <Text className="text-5xl font-extrabold text-zinc-900 dark:text-zinc-50">{data.overallIndex}</Text>
@@ -66,7 +69,7 @@ export default function AnalyticsScreen() {
             <View className="mt-1 flex-row items-center gap-1.5">
               <TrendingUp size={16} color="#059669" />
               <Text className="text-sm font-medium text-emerald-600">
-                Top 12% for active cognitive stability in age bracket
+                {t("analytics_top_percentile")}
               </Text>
             </View>
           </View>
@@ -74,7 +77,7 @@ export default function AnalyticsScreen() {
           <View className="gap-2 rounded-2xl border border-teal-200 bg-teal-50 p-4 dark:border-teal-900 dark:bg-teal-950/40">
             <View className="flex-row items-center gap-2">
               <Brain size={16} color="#0f766e" />
-              <Text className="text-xs font-bold uppercase text-teal-700">AI Neural Summary</Text>
+              <Text className="text-xs font-bold uppercase text-teal-700">{t("analytics_ai_summary")}</Text>
             </View>
             <Text className="text-sm leading-relaxed text-zinc-800 dark:text-zinc-200">
               {data.aiRecommendation}
@@ -84,7 +87,7 @@ export default function AnalyticsScreen() {
 
         <View className="gap-4">
           <Text className="text-xs font-bold uppercase tracking-wider text-zinc-400">
-            Cognitive Domain Breakdown
+            {t("analytics_domain_breakdown")}
           </Text>
           <View className="gap-3">
             {DOMAINS.map((d) => {
@@ -92,7 +95,7 @@ export default function AnalyticsScreen() {
               return (
                 <View key={d.key}>
                   <View className="mb-1 flex-row justify-between">
-                    <Text className="flex-1 text-sm font-semibold text-zinc-800 dark:text-zinc-200">{d.label}</Text>
+                    <Text className="flex-1 text-sm font-semibold text-zinc-800 dark:text-zinc-200">{t(d.labelKey)}</Text>
                     <Text className="text-sm font-extrabold" style={{ color: d.color }}>
                       {val}%
                     </Text>
@@ -108,7 +111,7 @@ export default function AnalyticsScreen() {
 
         <View className="border-t border-zinc-200 pt-4 dark:border-zinc-800">
           <Text className="text-xs text-zinc-400">
-            {data.totalSessionsCompleted} sessions completed total
+            {data.totalSessionsCompleted} {t("analytics_sessions_completed")}
           </Text>
         </View>
       </View>

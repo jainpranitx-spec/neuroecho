@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import { registerScreenActions, clearScreenActions } from "../../lib/screenActions";
 import {
   AlertTriangle,
   ArrowRight,
@@ -52,6 +53,17 @@ export default function SpotAiLieScreen() {
     };
   }, []);
 
+  // Registered once so the AI companion can trigger playback via voice
+  // command ("open Spot the AI Lie and start it") — the ref keeps it
+  // pointed at the latest startPlayback closure without re-registering
+  // on every render.
+  const startPlaybackRef = useRef<() => void>(() => {});
+  useEffect(() => {
+    const handlers = { start: () => startPlaybackRef.current() };
+    registerScreenActions(handlers);
+    return () => clearScreenActions(handlers);
+  }, []);
+
   const resetRound = () => {
     stopSpeech();
     setIsPlaying(false);
@@ -80,6 +92,7 @@ export default function SpotAiLieScreen() {
       () => setIsPlaying(false)
     );
   };
+  startPlaybackRef.current = startPlayback;
 
   const pausePlayback = () => {
     stopSpeech();

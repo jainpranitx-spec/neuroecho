@@ -6,6 +6,7 @@ import HubScreen from "../screens/HubScreen";
 import AnalyticsScreen from "../screens/AnalyticsScreen";
 import SettingsScreen from "../screens/SettingsScreen";
 import { useAiModal } from "../context/AiModalContext";
+import { useLanguage } from "../context/LanguageContext";
 import { MainTabParamList } from "./types";
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -25,6 +26,8 @@ function AskAiHeaderButton() {
 }
 
 export default function MainTabs() {
+  const { t } = useLanguage();
+
   return (
     <Tab.Navigator
       screenOptions={{
@@ -39,8 +42,8 @@ export default function MainTabs() {
         name="Hub"
         component={HubScreen}
         options={{
-          title: "NeuroEcho",
-          tabBarLabel: "Hub",
+          title: t("nav_title"),
+          tabBarLabel: t("tab_hub"),
           tabBarIcon: ({ color, size }) => <Brain color={color} size={size} />,
         }}
       />
@@ -48,8 +51,8 @@ export default function MainTabs() {
         name="Analytics"
         component={AnalyticsScreen}
         options={{
-          title: "Cognitive Analytics",
-          tabBarLabel: "Analytics",
+          title: t("nav_analytics_title"),
+          tabBarLabel: t("tab_analytics"),
           tabBarIcon: ({ color, size }) => <BarChart2 color={color} size={size} />,
         }}
       />
@@ -57,8 +60,8 @@ export default function MainTabs() {
         name="Settings"
         component={SettingsScreen}
         options={{
-          title: "Zen Settings",
-          tabBarLabel: "Settings",
+          title: t("nav_settings_title"),
+          tabBarLabel: t("tab_settings"),
           tabBarIcon: ({ color, size }) => <SettingsIcon color={color} size={size} />,
         }}
       />

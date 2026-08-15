@@ -1,11 +1,10 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import Markdown from "react-native-markdown-display";
 import {
   ActivityIndicator,
   Modal,
   Pressable,
   ScrollView,
-  StyleSheet,
   Text,
   TextInput,
   View,
@@ -14,9 +13,14 @@ import { Brain, Sparkles, X } from "lucide-react-native";
 import { useAiModal } from "../context/AiModalContext";
 import { api } from "../lib/api";
 import { useAsyncGuard } from "../lib/useAsyncGuard";
+import { useTheme } from "../context/ThemeContext";
+import { useLanguage } from "../context/LanguageContext";
 
 export default function AiAssistantModal() {
   const { isOpen, close } = useAiModal();
+  const { isDark } = useTheme();
+  const { language, t } = useLanguage();
+  const markdownStyles = useMemo(() => createMarkdownStyles(isDark), [isDark]);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [response, setResponse] = useState<{ answer: string; sources: string[] } | null>(null);
@@ -28,7 +32,7 @@ export default function AiAssistantModal() {
       setLoading(true);
       setResponse(null);
       try {
-        const data = await api.askAi(query);
+        const data = await api.askAi(query, language);
         setResponse(data);
       } catch (err) {
         console.warn("[AiAssistantModal] askAi failed", err);
@@ -52,10 +56,8 @@ export default function AiAssistantModal() {
                 <Sparkles size={16} color="white" />
               </View>
               <View>
-                <Text className="text-lg font-bold text-zinc-900 dark:text-zinc-50">NeuroEcho AI Assistant</Text>
-                <Text className="text-xs text-zinc-400">
-                  Ask cognitive questions or request a custom game topic
-                </Text>
+                <Text className="text-lg font-bold text-zinc-900 dark:text-zinc-50">{t("assistant_title")}</Text>
+                <Text className="text-xs text-zinc-400">{t("assistant_subtitle")}</Text>
               </View>
             </View>
             <Pressable
@@ -72,7 +74,7 @@ export default function AiAssistantModal() {
             <TextInput
               value={query}
               onChangeText={setQuery}
-              placeholder="Ask anything, e.g. 'How to improve my focus?'"
+              placeholder={t("assistant_placeholder")}
               placeholderTextColor="#a1a1aa"
               className="flex-1 rounded-2xl border border-zinc-200 bg-zinc-50 px-5 py-4 text-base text-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
               onSubmitEditing={handleAsk}
@@ -84,7 +86,7 @@ export default function AiAssistantModal() {
               className="rounded-xl bg-teal-600 px-5 py-4 disabled:opacity-50"
             >
               <Text className="text-sm font-semibold text-white">
-                {loading ? "Thinking..." : "Ask AI"}
+                {loading ? t("assistant_thinking") : t("assistant_ask")}
               </Text>
             </Pressable>
           </View>
@@ -100,7 +102,7 @@ export default function AiAssistantModal() {
               <View className="mb-2 flex-row items-center gap-2">
                 <Brain size={16} color="#0f766e" />
                 <Text className="text-xs font-bold uppercase tracking-wide text-teal-700">
-                  NeuroEcho Cognitive Answer
+                  {t("assistant_answer_heading")}
                 </Text>
               </View>
               
@@ -128,31 +130,34 @@ export default function AiAssistantModal() {
   );
 }
 
-const markdownStyles = StyleSheet.create({
-  body: {
-    fontSize: 15,
-    lineHeight: 22,
-    color: '#27272a',
-  },
-  heading1: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginVertical: 6,
-    color: '#0f766e',
-  },
-  heading2: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginVertical: 4,
-    color: '#111827',
-  },
-  bullet_list: {
-    marginVertical: 4,
-  },
-  list_item: {
-    marginVertical: 2,
-  },
-  strong: {
-    fontWeight: 'bold',
-  },
-});
+function createMarkdownStyles(isDark: boolean) {
+  return {
+    body: {
+      fontSize: 15,
+      lineHeight: 22,
+      color: isDark ? "#e4e4e7" : "#27272a",
+    },
+    heading1: {
+      fontSize: 18,
+      fontWeight: "bold" as const,
+      marginVertical: 6,
+      color: isDark ? "#2dd4bf" : "#0f766e",
+    },
+    heading2: {
+      fontSize: 16,
+      fontWeight: "bold" as const,
+      marginVertical: 4,
+      color: isDark ? "#f4f4f5" : "#111827",
+    },
+    bullet_list: {
+      marginVertical: 4,
+    },
+    list_item: {
+      marginVertical: 2,
+    },
+    strong: {
+      fontWeight: "bold" as const,
+      color: isDark ? "#f4f4f5" : "#18181b",
+    },
+  };
+}
