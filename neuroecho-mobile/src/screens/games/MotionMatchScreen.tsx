@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import Text from "../../components/AccessibleText";
+import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { CameraOff, CheckCircle2, Play, XCircle } from "lucide-react-native";
 import { MOTION_TARGETS } from "../../lib/gameData";

@@ -1,5 +1,6 @@
 import React, { Component, ErrorInfo, ReactNode } from "react";
-import { Pressable, Text, View } from "react-native";
+import Text from "./AccessibleText";
+import { Pressable, View } from "react-native";
 import { AlertTriangle, RotateCcw } from "lucide-react-native";
 
 interface Props {

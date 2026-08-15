@@ -1,6 +1,8 @@
 import React from "react";
 import { ScrollView, ScrollViewProps, StyleProp, ViewStyle } from "react-native";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
+import { useAccessibility } from "../context/AccessibilityContext";
+import { useTheme } from "../context/ThemeContext";
 
 /**
  * A ScrollView for screens nested inside the bottom tab navigator.
@@ -13,13 +15,17 @@ import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 export default function TabScreenScroll({
   children,
   contentContainerStyle,
+  style,
   ...rest
 }: ScrollViewProps & { contentContainerStyle?: StyleProp<ViewStyle> }) {
   const tabBarHeight = useBottomTabBarHeight();
+  const { highContrast } = useAccessibility();
+  const { isDark } = useTheme();
 
   return (
     <ScrollView
       {...rest}
+      style={[style, highContrast ? { backgroundColor: isDark ? "#000000" : "#ffffff" } : undefined]}
       contentContainerStyle={[
         { padding: 16, gap: 24, paddingBottom: tabBarHeight + 24 },
         contentContainerStyle,

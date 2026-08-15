@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Pressable, Text, View } from "react-native";
+import Text from "../components/AccessibleText";
+import { Pressable, View } from "react-native";
 import TabScreenScroll from "../components/TabScreenScroll";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -22,6 +23,7 @@ const GAMES = [
     id: "spot-ai-lie" as const,
     screen: "SpotAiLie" as const,
     titleKey: "game_spot_ai_lie" as TranslationKey,
+    descriptionKey: "game_spot_ai_lie_desc" as TranslationKey,
     icon: Mic,
     accentHex: "#d97706",
     iconBg: "bg-amber-100",
@@ -30,6 +32,7 @@ const GAMES = [
     id: "era-guesser" as const,
     screen: "EraGuesser" as const,
     titleKey: "game_era_guesser" as TranslationKey,
+    descriptionKey: "game_era_guesser_desc" as TranslationKey,
     icon: Clock,
     accentHex: "#2563eb",
     iconBg: "bg-blue-100",
@@ -38,6 +41,7 @@ const GAMES = [
     id: "recipe-rebuilder" as const,
     screen: "RecipeRebuilder" as const,
     titleKey: "game_recipe_rebuilder" as TranslationKey,
+    descriptionKey: "game_recipe_rebuilder_desc" as TranslationKey,
     icon: ListOrdered,
     accentHex: "#059669",
     iconBg: "bg-emerald-100",
@@ -46,6 +50,7 @@ const GAMES = [
     id: "motion-match" as const,
     screen: "MotionMatch" as const,
     titleKey: "game_motion_match" as TranslationKey,
+    descriptionKey: "game_motion_match_desc" as TranslationKey,
     icon: Hand,
     accentHex: "#0d9488",
     iconBg: "bg-teal-100",
@@ -70,7 +75,7 @@ export default function HubScreen() {
     <TabScreenScroll className="flex-1 bg-zinc-50 dark:bg-zinc-950">
       {/* Hero */}
       <View className="rounded-3xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
-        <Text className="text-3xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-50">
+        <Text accessibilityRole="header" className="text-3xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-50">
           {t("hub_welcome")}
         </Text>
         <Text className="mt-2 text-base leading-relaxed text-zinc-600 dark:text-zinc-400">
@@ -96,32 +101,47 @@ export default function HubScreen() {
             <Text className="text-[11px] font-bold uppercase tracking-wider text-teal-600">
               {t("hub_ai_insight_label")}
             </Text>
-            <Text
-              className="mt-0.5 text-sm leading-relaxed text-zinc-600 dark:text-zinc-400"
-              numberOfLines={2}
-            >
+            <Text className="mt-0.5 text-base leading-relaxed text-zinc-700 dark:text-zinc-300">
               {analytics.aiRecommendation}
             </Text>
           </View>
         </View>
       </View>
 
-      {/* Games — big, simple tiles. One tap opens the game. */}
-      <View className="flex-row flex-wrap gap-4">
+      {/* A single-column list is easier to scan than a dense grid and leaves
+          enough room to explain each activity before the user opens it. */}
+      <View className="gap-3">
+        <Text accessibilityRole="header" className="text-2xl font-extrabold text-zinc-950 dark:text-white">
+          {t("hub_choose_activity")}
+        </Text>
+        <Text className="text-base leading-relaxed text-zinc-600 dark:text-zinc-300">
+          {t("hub_choose_activity_hint")}
+        </Text>
         {GAMES.map((game) => {
           const Icon = game.icon;
           return (
             <Pressable
               key={game.id}
               onPress={() => navigation.navigate(game.screen)}
-              className="min-w-[46%] flex-1 items-center gap-3 rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm active:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900"
+              accessibilityRole="button"
+              accessibilityLabel={`${t(game.titleKey)}. ${t(game.descriptionKey)}. ${t("hub_start_game")}`}
+              accessibilityHint={t("hub_start_game")}
+              className="min-h-32 flex-row items-center gap-4 rounded-3xl border-2 border-zinc-200 bg-white p-5 shadow-sm active:bg-teal-50 dark:border-zinc-700 dark:bg-zinc-900"
             >
-              <View className={`rounded-3xl p-5 ${game.iconBg}`}>
-                <Icon size={36} color={game.accentHex} />
+              <View className={`rounded-3xl p-4 ${game.iconBg}`}>
+                <Icon size={38} color={game.accentHex} />
               </View>
-              <Text className="text-center text-lg font-bold text-zinc-900 dark:text-zinc-50">
-                {t(game.titleKey)}
-              </Text>
+              <View className="flex-1 gap-1.5">
+                <Text className="text-xl font-extrabold text-zinc-950 dark:text-white">
+                  {t(game.titleKey)}
+                </Text>
+                <Text className="text-base leading-relaxed text-zinc-600 dark:text-zinc-300">
+                  {t(game.descriptionKey)}
+                </Text>
+                <Text className="mt-1 text-base font-bold text-teal-700 dark:text-teal-300">
+                  {t("hub_start_game")}  →
+                </Text>
+              </View>
             </Pressable>
           );
         })}

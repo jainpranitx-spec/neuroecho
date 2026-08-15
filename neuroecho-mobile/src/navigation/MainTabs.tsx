@@ -1,5 +1,6 @@
 import React from "react";
 import { Pressable } from "react-native";
+import Text from "../components/AccessibleText";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { BarChart2, Brain, Settings as SettingsIcon, Sparkles } from "lucide-react-native";
 import HubScreen from "../screens/HubScreen";
@@ -13,14 +14,16 @@ const Tab = createBottomTabNavigator<MainTabParamList>();
 
 function AskAiHeaderButton() {
   const { open } = useAiModal();
+  const { t } = useLanguage();
   return (
     <Pressable
       onPress={open}
-      hitSlop={12}
-      className="mr-4 flex-row items-center gap-1.5 rounded-xl bg-teal-600 px-3 py-2"
-      accessibilityLabel="Ask NeuroEcho AI"
+      accessibilityRole="button"
+      className="mr-3 min-h-12 flex-row items-center gap-2 rounded-2xl bg-teal-700 px-4 py-2"
+      accessibilityLabel={`${t("nav_help")}: NeuroEcho AI`}
     >
-      <Sparkles size={14} color="white" />
+      <Sparkles size={20} color="white" />
+      <Text className="text-base font-bold text-white">{t("nav_help")}</Text>
     </Pressable>
   );
 }
@@ -32,10 +35,12 @@ export default function MainTabs() {
     <Tab.Navigator
       screenOptions={{
         headerRight: () => <AskAiHeaderButton />,
-        tabBarActiveTintColor: "#0d9488",
-        tabBarInactiveTintColor: "#a1a1aa",
-        headerTitleStyle: { fontWeight: "800" },
-        tabBarLabelStyle: { fontSize: 11, fontWeight: "600" },
+        tabBarActiveTintColor: "#0f766e",
+        tabBarInactiveTintColor: "#52525b",
+        headerTitleStyle: { fontWeight: "800", fontSize: 22 },
+        headerStyle: { height: 64 },
+        tabBarStyle: { height: 76, paddingTop: 8, paddingBottom: 8 },
+        tabBarLabelStyle: { fontSize: 14, fontWeight: "700" },
       }}
     >
       <Tab.Screen

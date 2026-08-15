@@ -18,6 +18,12 @@ const bestVoicePromises = new Map<SpeechLanguage, Promise<string | undefined>>()
 // speakText/speakFeedback call elsewhere in the app doesn't need to thread
 // the language through every call site.
 let activeLanguage: SpeechLanguage = "en-US";
+let feedbackEnabled = true;
+
+export function setVoiceFeedbackEnabled(enabled: boolean) {
+  feedbackEnabled = enabled;
+  if (!enabled) Speech.stop();
+}
 
 export function setSpeechLanguage(language: SpeechLanguage) {
   activeLanguage = language;
@@ -110,6 +116,7 @@ export function stopSpeech() {
 }
 
 export async function speakFeedback(text: string, rate: number = 0.95) {
+  if (!feedbackEnabled) return;
   Speech.stop();
   const voice = await getBestVoiceId(activeLanguage);
   Speech.speak(text, { rate, pitch: 1.0, language: activeLanguage, voice });
