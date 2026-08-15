@@ -6,6 +6,13 @@ import { MOTION_TARGETS } from "../../lib/gameData";
 import { speakFeedback } from "../../lib/speech";
 import { api } from "../../lib/api";
 import ConfettiBurst, { ConfettiBurstHandle } from "../../components/ConfettiBurst";
+import HowToPlay from "../../components/HowToPlay";
+
+const INSTRUCTIONS = [
+  "Tap 'Start' to begin the stage.",
+  "Watch the target shown at the top of the camera box.",
+  "If it's a Fruit or Food, tap 'RAISE LEFT'. If it's a Machine or Tool, tap 'RAISE RIGHT'. Answer quickly!",
+];
 import { registerScreenActions, clearScreenActions } from "../../lib/screenActions";
 
 export default function MotionMatchScreen() {
@@ -118,6 +125,8 @@ export default function MotionMatchScreen() {
     <View className="flex-1 bg-zinc-50 dark:bg-zinc-950">
       <ConfettiBurst ref={confettiRef} />
       <ScrollView contentContainerStyle={{ padding: 16, gap: 20 }}>
+        <HowToPlay steps={INSTRUCTIONS} />
+
         <View className="flex-row items-center justify-between">
           <Text className="text-sm font-semibold text-zinc-500 dark:text-zinc-400">
             Dual-Task rule: Fruit = Left, Machine = Right

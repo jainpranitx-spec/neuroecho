@@ -14,13 +14,34 @@ import { RecipeItem } from "../../lib/types";
 import { speakFeedback } from "../../lib/speech";
 import { api } from "../../lib/api";
 import ConfettiBurst, { ConfettiBurstHandle } from "../../components/ConfettiBurst";
+import HowToPlay from "../../components/HowToPlay";
+
+const INSTRUCTIONS = [
+  "The recipe steps below are all mixed up.",
+  "Use the up and down arrows next to each step to move it into the correct cooking order.",
+  "When every step is in the right place, tap 'Verify Recipe Sequence'.",
+];
+
+// The recipe data lists steps in their correct order — this actually
+// scrambles them for play. Re-shuffles if the result happens to land back
+// in correct order (only possible for very short lists, but cheap to guard).
+function shuffleSteps(steps: RecipeItem["scrambledSteps"]): RecipeItem["scrambledSteps"] {
+  const shuffled = [...steps];
+  do {
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+  } while (shuffled.length > 1 && shuffled.every((step, idx) => step.correctIndex === idx));
+  return shuffled;
+}
 
 export default function RecipeRebuilderScreen() {
   const [recipes] = useState<RecipeItem[]>(RECIPE_ITEMS);
   const [currentRecipeIdx, setCurrentRecipeIdx] = useState(0);
   const currentRecipe = recipes[currentRecipeIdx];
 
-  const [steps, setSteps] = useState(currentRecipe.scrambledSteps);
+  const [steps, setSteps] = useState(() => shuffleSteps(currentRecipe.scrambledSteps));
   const [hasVerified, setHasVerified] = useState(false);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [score, setScore] = useState(0);
@@ -92,7 +113,7 @@ export default function RecipeRebuilderScreen() {
   const handleNextRecipe = () => {
     const nextIdx = (currentRecipeIdx + 1) % recipes.length;
     setCurrentRecipeIdx(nextIdx);
-    setSteps(recipes[nextIdx].scrambledSteps);
+    setSteps(shuffleSteps(recipes[nextIdx].scrambledSteps));
     setHasVerified(false);
     hasVerifiedRef.current = false;
     setIsCorrect(null);
@@ -100,7 +121,7 @@ export default function RecipeRebuilderScreen() {
   };
 
   const reshuffle = () => {
-    setSteps([...currentRecipe.scrambledSteps].sort(() => Math.random() - 0.5));
+    setSteps(shuffleSteps(currentRecipe.scrambledSteps));
     setHasVerified(false);
     hasVerifiedRef.current = false;
     setIsCorrect(null);
@@ -115,6 +136,8 @@ export default function RecipeRebuilderScreen() {
             <Text className="text-lg font-bold text-emerald-700">{score} Points</Text>
           </View>
         </View>
+
+        <HowToPlay steps={INSTRUCTIONS} />
 
         <View className="gap-5 rounded-3xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
           <View className="flex-row items-center justify-between">

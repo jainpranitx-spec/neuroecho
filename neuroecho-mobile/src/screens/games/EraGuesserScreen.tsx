@@ -14,6 +14,13 @@ import { ERA_GUESSER_ITEMS } from "../../lib/gameData";
 import { speakFeedback } from "../../lib/speech";
 import { api } from "../../lib/api";
 import ConfettiBurst, { ConfettiBurstHandle } from "../../components/ConfettiBurst";
+import HowToPlay from "../../components/HowToPlay";
+
+const INSTRUCTIONS = [
+  "Look at the scene from an earlier time period.",
+  "One of the labeled items doesn't belong in that era — it's out of place.",
+  "Tap the item you think doesn't belong, then read the explanation.",
+];
 
 export default function EraGuesserScreen() {
   const [items] = useState(ERA_GUESSER_ITEMS);
@@ -162,6 +169,8 @@ export default function EraGuesserScreen() {
             <Text className="text-lg font-bold text-blue-700">{score} Points</Text>
           </View>
         </View>
+
+        <HowToPlay steps={INSTRUCTIONS} />
 
         <View className="gap-5 rounded-3xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
           <View>

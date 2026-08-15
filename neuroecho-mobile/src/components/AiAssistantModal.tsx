@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Markdown from "react-native-markdown-display";
 import {
   ActivityIndicator,
@@ -25,6 +25,12 @@ export default function AiAssistantModal() {
   const [loading, setLoading] = useState(false);
   const [response, setResponse] = useState<{ answer: string; sources: string[] } | null>(null);
   const askGuard = useAsyncGuard();
+
+  // A previous answer stays in whatever language it was generated in —
+  // clear it on language switch so stale-language text can't linger.
+  useEffect(() => {
+    setResponse(null);
+  }, [language]);
 
   const handleAsk = () =>
     askGuard.runGuarded(async () => {

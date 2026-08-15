@@ -4,7 +4,6 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Mic, Square, X } from "lucide-react-native";
 import {
   useAudioRecorder,
-  RecordingPresets,
   requestRecordingPermissionsAsync,
   getRecordingPermissionsAsync,
 } from "expo-audio";
@@ -13,7 +12,7 @@ import { api, CompanionTurn } from "../lib/api";
 import { speakFeedback, stopSpeech } from "../lib/speech";
 import { navigateToGame, navigateToTab, navigationRef } from "../navigation/navigationRef";
 import { useAsyncGuard } from "../lib/useAsyncGuard";
-import { setRecordingAudioMode, setPlaybackAudioMode } from "../lib/audioMode";
+import { setRecordingAudioMode, setPlaybackAudioMode, VOICE_RECORDING_OPTIONS } from "../lib/audioMode";
 import { useAudioOutput } from "../context/AudioOutputContext";
 import { triggerScreenStart } from "../lib/screenActions";
 import { useLanguage } from "../context/LanguageContext";
@@ -38,9 +37,24 @@ export default function AiCompanion() {
   ]);
   const [tabBarVisible, setTabBarVisible] = useState(true);
 
-  const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
+  const recorder = useAudioRecorder(VOICE_RECORDING_OPTIONS);
   const historyRef = useRef<CompanionTurn[]>([]);
   const { runGuarded, isLocked } = useAsyncGuard();
+
+  // Conversation history holds text in whatever language it was generated
+  // in — without this, switching the language back and forth left old
+  // replies (in the previous language) sitting in the chat and in the
+  // context sent to Gemini. Reset on every language change, skipping the
+  // very first mount since the initial state above is already correct.
+  const isFirstLanguageRender = useRef(true);
+  useEffect(() => {
+    if (isFirstLanguageRender.current) {
+      isFirstLanguageRender.current = false;
+      return;
+    }
+    historyRef.current = [];
+    setMessages([{ role: "assistant", text: t("companion_greeting") }]);
+  }, [language]);
 
   // The companion FAB is mounted outside the tab navigator, so it has no
   // way to know the tab bar's height — instead we just track whether the

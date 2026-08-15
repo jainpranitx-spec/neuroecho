@@ -18,7 +18,14 @@ import { StoryLieItem } from "../../lib/types";
 import { speakFeedback, speakText, stopSpeech } from "../../lib/speech";
 import { api } from "../../lib/api";
 import ConfettiBurst, { ConfettiBurstHandle } from "../../components/ConfettiBurst";
+import HowToPlay from "../../components/HowToPlay";
 import { useAsyncGuard } from "../../lib/useAsyncGuard";
+
+const INSTRUCTIONS = [
+  "Tap 'Play Audio Story' and listen carefully.",
+  "As soon as you hear something that sounds made up or wrong, press the big buzzer button right away.",
+  "You'll find out immediately if you caught the AI's mistake.",
+];
 
 export default function SpotAiLieScreen() {
   const [stories, setStories] = useState<StoryLieItem[]>(SPOT_LIE_STORIES);
@@ -196,6 +203,8 @@ export default function SpotAiLieScreen() {
             <Text className="text-lg font-bold text-amber-700">{score} Points</Text>
           </View>
         </View>
+
+        <HowToPlay steps={INSTRUCTIONS} />
 
         {/* Story selector */}
         <View className="gap-2">
