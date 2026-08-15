@@ -5,6 +5,7 @@ import SpotAiLieScreen from "../screens/games/SpotAiLieScreen";
 import EraGuesserScreen from "../screens/games/EraGuesserScreen";
 import RecipeRebuilderScreen from "../screens/games/RecipeRebuilderScreen";
 import MotionMatchScreen from "../screens/games/MotionMatchScreen";
+import GeneratedGameScreen from "../screens/games/GeneratedGameScreen";
 import ErrorBoundary from "../components/ErrorBoundary";
 import { RootStackParamList } from "./types";
 
@@ -51,6 +52,11 @@ export default function RootNavigator({ reduceMotion = false }: { reduceMotion?:
         name="MotionMatch"
         component={withGameBoundary(MotionMatchScreen, "Motion Match")}
         options={{ title: "Motion Match", headerBackTitle: "Hub" }}
+      />
+      <Stack.Screen
+        name="GeneratedGame"
+        component={GeneratedGameScreen}
+        options={({ route }) => ({ title: route.params.title, headerBackTitle: "Games" })}
       />
     </Stack.Navigator>
   );

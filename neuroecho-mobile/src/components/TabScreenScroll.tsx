@@ -27,7 +27,14 @@ export default function TabScreenScroll({
       {...rest}
       style={[style, highContrast ? { backgroundColor: isDark ? "#000000" : "#ffffff" } : undefined]}
       contentContainerStyle={[
-        { padding: 16, gap: 24, paddingBottom: tabBarHeight + 24 },
+        {
+          width: "100%",
+          maxWidth: 760,
+          alignSelf: "center",
+          padding: 16,
+          gap: 24,
+          paddingBottom: tabBarHeight + 24,
+        },
         contentContainerStyle,
       ]}
     >

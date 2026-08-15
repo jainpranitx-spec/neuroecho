@@ -12,6 +12,7 @@ export type RootStackParamList = {
   EraGuesser: undefined;
   RecipeRebuilder: undefined;
   MotionMatch: undefined;
+  GeneratedGame: { gameId: string; title: string };
 };
 
 declare global {

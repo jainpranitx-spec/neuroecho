@@ -63,6 +63,21 @@ RN components) to stay close to the original design system. Icons are
 version never did real hand-tracking either, despite bundling a MediaPipe
 dependency it never called).
 
+## Requested game generation
+
+The Hub's **Ask for a new game** flow stores the request ID only on the
+requesting device. The backend dispatches `.github/workflows/generate-game.yml`,
+which asks Gemini for a declarative game definition, type-checks and bundles the
+app, and opens a pull request for human review. It never executes generated
+JavaScript on a phone. After that pull request is merged and an app or OTA update
+is released, the game appears only on the device that requested that ID.
+
+Production setup requires:
+
+- `GAME_GENERATOR_GITHUB_TOKEN` and `GAME_GENERATOR_REPOSITORY` on the backend
+- `GEMINI_API_KEY` as a GitHub Actions repository secret
+- GitHub Actions workflow permissions that allow creating pull requests
+
 ## Building for real devices / app stores
 
 Native builds run on Expo's cloud via **EAS Build** — a plain CI runner

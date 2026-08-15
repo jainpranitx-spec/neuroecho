@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import Text from "../components/AccessibleText";
-import { AccessibilityInfo, Platform, Pressable, View } from "react-native";
+import { AccessibilityInfo, Platform, Pressable, View, useWindowDimensions } from "react-native";
 import TabScreenScroll from "../components/TabScreenScroll";
 import { Accessibility, CheckCircle2, Eye, Globe, Moon, PhoneCall, Save, ShieldCheck, Sliders, Smartphone, Sun, Type, Volume2 } from "lucide-react-native";
 import { speakFeedback } from "../lib/speech";
@@ -45,6 +45,7 @@ export default function SettingsScreen() {
   const { preference, setPreference } = useTheme();
   const { output, setOutput } = useAudioOutput();
   const { language, setLanguage, t } = useLanguage();
+  const { width, fontScale: systemFontScale } = useWindowDimensions();
   const {
     textSize,
     setTextSize,
@@ -55,6 +56,7 @@ export default function SettingsScreen() {
     voiceFeedback,
     setVoiceFeedback,
   } = useAccessibility();
+  const stackControls = width < 400 || systemFontScale > 1.2 || textSize !== "standard";
   const [profile, setProfile] = useState<SettingsProfile>({
     name: "Senior Explorer",
     age: 72,
@@ -181,7 +183,7 @@ export default function SettingsScreen() {
             <Globe size={18} color="#0d9488" />
             <Text className="text-sm font-bold text-zinc-900 dark:text-zinc-100">{t("settings_language")}</Text>
           </View>
-          <View className="flex-row gap-2">
+          <View className={stackControls ? "gap-2" : "flex-row gap-2"}>
             {LANGUAGES.map((opt) => {
               const active = language === opt.code;
               return (
@@ -213,7 +215,7 @@ export default function SettingsScreen() {
             <Moon size={18} color="#0d9488" />
             <Text className="text-sm font-bold text-zinc-900 dark:text-zinc-100">{t("settings_appearance")}</Text>
           </View>
-          <View className="flex-row gap-2">
+          <View className={stackControls ? "gap-2" : "flex-row gap-2"}>
             {THEME_OPTIONS.map((opt) => {
               const Icon = opt.icon;
               const active = preference === opt.pref;
@@ -242,7 +244,7 @@ export default function SettingsScreen() {
         </View>
 
         {/* Tremor assist */}
-        <View className="flex-row items-center justify-between gap-4 rounded-2xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-800">
+        <View className={`gap-4 rounded-2xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-800 ${stackControls ? "items-start" : "flex-row items-center justify-between"}`}>
           <View className="flex-1 flex-row items-start gap-3">
             <View className="mt-0.5 rounded-2xl bg-teal-600 p-2.5">
               <ShieldCheck size={20} color="white" />
@@ -318,7 +320,7 @@ export default function SettingsScreen() {
             <Volume2 size={18} color="#0d9488" />
             <Text className="text-sm font-bold text-zinc-900 dark:text-zinc-100">{t("settings_voice_output")}</Text>
           </View>
-          <View className="flex-row gap-2">
+          <View className={stackControls ? "gap-2" : "flex-row gap-2"}>
             <Pressable
               onPress={() => setOutput("loudspeaker")}
               className={`flex-1 items-center gap-1.5 rounded-2xl border p-3 ${
@@ -406,7 +408,7 @@ export default function SettingsScreen() {
           </View>
         </View>
 
-        <View className="flex-row items-center justify-between border-t border-zinc-200 pt-4 dark:border-zinc-800">
+        <View className={`gap-4 border-t border-zinc-200 pt-4 dark:border-zinc-800 ${stackControls ? "items-stretch" : "flex-row items-center justify-between"}`}>
           {savedSuccess ? (
             <View className="flex-row items-center gap-1.5">
               <CheckCircle2 size={18} color="#059669" />
@@ -445,13 +447,17 @@ function AccessibilityToggle({
   onLabel: string;
   offLabel: string;
 }) {
+  const { width, fontScale } = useWindowDimensions();
+  const { textSize } = useAccessibility();
+  const stack = width < 390 || fontScale > 1.25 || textSize !== "standard";
+
   return (
     <Pressable
       onPress={() => onChange(!value)}
       accessibilityRole="switch"
       accessibilityState={{ checked: value }}
       accessibilityLabel={`${title}. ${description}`}
-      className="min-h-20 flex-row items-center gap-3 rounded-2xl border border-zinc-300 bg-white p-4 dark:border-zinc-600 dark:bg-zinc-900"
+      className={`min-h-20 gap-3 rounded-2xl border border-zinc-300 bg-white p-4 dark:border-zinc-600 dark:bg-zinc-900 ${stack ? "items-start" : "flex-row items-center"}`}
     >
       <View className="rounded-2xl bg-teal-700 p-3">{icon}</View>
       <View className="flex-1">
