@@ -1,0 +1,23 @@
+# Pre-grants Android runtime permissions required by NeuroEcho before the
+# test begins, so Maestro never gets stuck on the OS permission dialog.
+#
+# Include this at the top of any flow:
+#   - runFlow: flows/permissions.yaml
+#
+# The appId below must match the target APK's package.
+
+appId: com.neuroecho.arcade
+name: Grant Android runtime permissions
+tags:
+  - setup
+  - android
+
+---
+
+# -- Camera (used by Motion Match dual-task game stage) --
+- permission:
+    android: android.permission.CAMERA
+
+# -- Microphone (used by the AI Companion voice interaction) --
+- permission:
+    android: android.permission.RECORD_AUDIO
