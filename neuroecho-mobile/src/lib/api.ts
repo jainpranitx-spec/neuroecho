@@ -1,5 +1,20 @@
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { GameSession, GameType, StoryLieItem, UserProfile } from "./types";
 import { AppLanguage } from "./i18n";
+
+const LANGUAGE_NAMES: Record<AppLanguage, string> = {
+  en: "English",
+  hi: "Hindi (हिन्दी, in Devanagari script)",
+};
+
+// Strips LaTeX-style math markup Gemini sometimes emits, so answers render
+// as plain readable text instead of raw $...$ / \frac{}{} syntax.
+function cleanMathFormatting(text: string): string {
+  return text
+    .replace(/\$\$(.*?)\$\$/g, "$1")
+    .replace(/\$(.*?)\$/g, "$1")
+    .replace(/\\frac\{([^}]+)\}\{([^}]+)\}/g, "$1 / $2");
+}
 
 // Base URL for backend calls (fallback to localhost if env isn't set)
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:3000";
@@ -145,13 +160,37 @@ export const api = {
       timeoutMs: 30_000,
     }),
 
-  askAi: (query: string, language: AppLanguage = "en") =>
-    apiFetch<AskAiResponse>("/api/ai/query", {
-      method: "POST",
-      body: JSON.stringify({ query, language }),
-      idempotent: true,
-      timeoutMs: 30_000,
-    }),
+  // Direct client-side Gemini call (by request) — the key ships inside the
+  // app bundle via EXPO_PUBLIC_GEMINI_API_KEY, unlike askCompanion below
+  // which stays server-side.
+  askAi: async (query: string, language: AppLanguage = "en"): Promise<AskAiResponse> => {
+    const apiKey = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
+    if (!apiKey) {
+      return {
+        answer: "Gemini API key is missing. Add EXPO_PUBLIC_GEMINI_API_KEY to your .env.local file.",
+        sources: [],
+      };
+    }
+
+    try {
+      const genAI = new GoogleGenerativeAI(apiKey);
+      const model = genAI.getGenerativeModel({
+        model: "gemini-3.6-flash",
+        systemInstruction: `You are NeuroEcho AI, a warm, clear, encouraging cognitive assistant for older adults. Keep responses concise, high-contrast, easy to read, with 2-3 clear key bullet points and a warm encouraging closing tone. Format all mathematical equations using simple plain text (e.g., y = 4 / 2). Never use LaTeX formatting, dollar signs ($), or LaTeX commands like \\frac. Respond entirely in ${LANGUAGE_NAMES[language]}, regardless of what language the question was asked in.`,
+      });
+      const result = await model.generateContent(query);
+      const rawText = result.response.text();
+      const cleanedAnswer = cleanMathFormatting(rawText);
+
+      return {
+        answer: cleanedAnswer,
+        sources: ["Google Gemini AI"],
+      };
+    } catch (error) {
+      console.error("Gemini Direct Error:", error);
+      throw new ApiError("Failed to reach Gemini AI service");
+    }
+  },
 
   askCompanion: (audioBase64: string, mimeType: string, history: CompanionTurn[], language: AppLanguage = "en") =>
     apiFetch<CompanionResponse>("/api/ai/companion", {
