@@ -1,13 +1,11 @@
 import { GameSession, GameType, StoryLieItem, UserProfile } from "./types";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
-// Set via `EXPO_PUBLIC_API_URL` at build time (Expo inlines EXPO_PUBLIC_*
-// vars automatically — no extra config needed). Point this at your deployed
-// backend (see neuroecho-cognitive-arcade-prototype-v3), e.g.
-// https://neuroecho.vercel.app
+// Base URL for backend calls (fallback to localhost if env isn't set)
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:3000";
 
 const DEFAULT_TIMEOUT_MS = 10_000;
-const RETRYABLE_METHODS = new Set(["GET", undefined]); // don't retry POSTs (not idempotent)
+const RETRYABLE_METHODS = new Set(["GET", undefined]);
 
 export class ApiError extends Error {
   readonly status?: number;
@@ -84,26 +82,22 @@ async function fetchOnce<T>(path: string, options?: RequestInit, timeoutMs = DEF
   }
 }
 
-/**
- * Wraps fetchOnce with a single retry for transient failures. Only retries
- * safe/idempotent requests (GET, or POST explicitly marked `idempotent`) so
- * we never risk double-submitting a game session or story generation.
- * Skips retrying 4xx application errors (those won't succeed on retry).
- */
 async function apiFetch<T>(
   path: string,
-  options?: RequestInit & { idempotent?: boolean }
+  options?: RequestInit & { idempotent?: boolean; timeoutMs?: number }
 ): Promise<T> {
   const canRetry = RETRYABLE_METHODS.has(options?.method) || options?.idempotent;
+  const timeoutMs = options?.timeoutMs ?? DEFAULT_TIMEOUT_MS;
+  const { idempotent, timeoutMs: _, ...fetchOptions } = options ?? {};
 
   try {
-    return await fetchOnce<T>(path, options);
+    return await fetchOnce<T>(path, fetchOptions, timeoutMs);
   } catch (err) {
     const isClientError = err instanceof ApiError && err.status !== undefined && err.status < 500;
     if (!canRetry || isClientError) throw err;
 
     await sleep(500);
-    return fetchOnce<T>(path, options);
+    return fetchOnce<T>(path, fetchOptions, timeoutMs);
   }
 }
 
@@ -130,16 +124,33 @@ export const api = {
     apiFetch<StoryLieItem>("/api/ai/story", {
       method: "POST",
       body: JSON.stringify({ topic }),
-      // Generation is a create-a-new-story action, not strictly idempotent
-      // in effect, but safe to retry once here since a timed-out request
-      // never reached the "story generated" state the caller acts on.
       idempotent: true,
+      timeoutMs: 30_000,
     }),
 
-  askAi: (query: string) =>
-    apiFetch<AskAiResponse>("/api/ai/query", {
-      method: "POST",
-      body: JSON.stringify({ query }),
-      idempotent: true,
-    }),
+  // Direct client-side Gemini call
+  askAi: async (query: string): Promise<AskAiResponse> => {
+    const apiKey = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
+    if (!apiKey) {
+      return {
+        answer: "Gemini API key is missing. Add EXPO_PUBLIC_GEMINI_API_KEY to your .env.local file.",
+        sources: [],
+      };
+    }
+
+    try {
+      const genAI = new GoogleGenerativeAI(apiKey);
+      const model = genAI.getGenerativeModel({ model: "gemini-3.6-flash" });
+      const result = await model.generateContent(query);
+      const text = result.response.text();
+
+      return {
+        answer: text,
+        sources: ["Google Gemini AI"],
+      };
+    } catch (error) {
+      console.error("Gemini Direct Error:", error);
+      throw new ApiError("Failed to reach Gemini AI service");
+    }
+  },
 };
