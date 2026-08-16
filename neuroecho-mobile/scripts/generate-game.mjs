@@ -86,11 +86,20 @@ for (const round of game.rounds) {
 
 const manifestPath = path.resolve("src/lib/generatedGames.ts");
 const current = await readFile(manifestPath, "utf8");
-const match = current.match(/export const GENERATED_GAMES: GeneratedGameDefinition\[] = ([\s\S]*?);\n\nexport function/);
+const manifestPattern = /export const GENERATED_GAMES: GeneratedGameDefinition\[] = ([\s\S]*?);\n\nexport function/;
+const match = current.match(manifestPattern);
 if (!match) throw new Error("Could not read generated game manifest");
 const existing = JSON.parse(match[1]);
 if (existing.some((entry) => entry.id === id)) throw new Error("This request id already exists");
 const games = [...existing, game];
-const next = current.replace(match[1], JSON.stringify(games, null, 2));
+// Using current.replace(match[1], ...) here previously did a plain
+// substring search for the captured array text (e.g. "[]"), which also
+// matches inside unrelated type declarations earlier in the file (like
+// "GeneratedGameChoice[]") and corrupted them instead of the array. Doing
+// the substitution via the full unique regex match instead avoids that.
+const next = current.replace(
+  manifestPattern,
+  `export const GENERATED_GAMES: GeneratedGameDefinition[] = ${JSON.stringify(games, null, 2)};\n\nexport function`
+);
 await writeFile(manifestPath, next);
 console.log(`Generated ${game.title} (${id}) with ${game.rounds.length} rounds`);
