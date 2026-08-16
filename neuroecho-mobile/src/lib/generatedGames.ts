@@ -59,6 +59,74 @@ export const GENERATED_GAMES: GeneratedGameDefinition[] = [
         "successMessage": "Splendid finish! Music is a wonderful journey through time."
       }
     ]
+  },
+  {
+    "id": "2da90fcd-5684-483f-af95-b16f9725c35e",
+    "title": "Gentle Mind Refresh",
+    "description": "A relaxing trivia test designed to exercise your memory and stimulate your mind.",
+    "kind": "quiz",
+    "accent": "teal",
+    "instructions": [
+      "Read each question at your own pace.",
+      "Select the answer you feel is correct.",
+      "Enjoy a calm and pressure-free experience."
+    ],
+    "rounds": [
+      {
+        "prompt": "Which season comes right after Spring?",
+        "choices": [
+          {
+            "label": "Summer",
+            "isCorrect": true
+          },
+          {
+            "label": "Winter",
+            "isCorrect": false
+          },
+          {
+            "label": "Autumn",
+            "isCorrect": false
+          }
+        ],
+        "successMessage": "Wonderful! Summer follows Spring with warmth and sunshine."
+      },
+      {
+        "prompt": "What do bees collect from flowers to make honey?",
+        "choices": [
+          {
+            "label": "Rainwater",
+            "isCorrect": false
+          },
+          {
+            "label": "Nectar",
+            "isCorrect": true
+          },
+          {
+            "label": "Pebbles",
+            "isCorrect": false
+          }
+        ],
+        "successMessage": "Correct! Bees collect sweet nectar from blossoms."
+      },
+      {
+        "prompt": "Which of these is a warm and comforting beverage?",
+        "choices": [
+          {
+            "label": "Ice water",
+            "isCorrect": false
+          },
+          {
+            "label": "Chamomile tea",
+            "isCorrect": true
+          },
+          {
+            "label": "Lemonade",
+            "isCorrect": false
+          }
+        ],
+        "successMessage": "Spot on! Chamomile tea is known for its calming warmth."
+      }
+    ]
   }
 ];
 
