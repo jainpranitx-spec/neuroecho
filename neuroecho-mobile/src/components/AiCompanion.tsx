@@ -9,15 +9,17 @@ import {
   getRecordingPermissionsAsync,
 } from "expo-audio";
 import { File } from "expo-file-system";
-import { api, CompanionTurn } from "../lib/api";
+import { api, CompanionTurn, slugifyGameId } from "../lib/api";
 import { speakFeedback, stopSpeech } from "../lib/speech";
-import { navigateToGame, navigateToTab, navigationRef } from "../navigation/navigationRef";
+import { navigateToGame, navigateToGeneratedGame, navigateToTab, navigationRef } from "../navigation/navigationRef";
 import { useAsyncGuard } from "../lib/useAsyncGuard";
 import { setRecordingAudioMode, setPlaybackAudioMode, VOICE_RECORDING_OPTIONS } from "../lib/audioMode";
 import { useAudioOutput } from "../context/AudioOutputContext";
 import { triggerScreenStart } from "../lib/screenActions";
 import { useLanguage } from "../context/LanguageContext";
 import { useAccessibility } from "../context/AccessibilityContext";
+import { saveLocalGeneratedGame } from "../lib/localGeneratedGames";
+import { GeneratedGameDefinition } from "../lib/generatedGames";
 
 const TAB_SCREENS = new Set(["Hub", "Analytics", "Settings"]);
 
@@ -34,6 +36,7 @@ export default function AiCompanion() {
   const [isOpen, setIsOpen] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [isThinking, setIsThinking] = useState(false);
+  const [isBuildingGame, setIsBuildingGame] = useState(false);
   const [errorText, setErrorText] = useState<string | null>(null);
   const [messages, setMessages] = useState<DisplayMessage[]>([
     { role: "assistant", text: t("companion_greeting") },
@@ -163,6 +166,21 @@ export default function AiCompanion() {
         } else if (response.action?.type === "navigate_screen" && response.action.target) {
           const navigated = navigateToTab(response.action.target);
           if (navigated) setTimeout(closeCompanion, 900);
+        } else if (response.action?.type === "generate_game" && response.action.gamePrompt) {
+          setIsBuildingGame(true);
+          try {
+            const built = await api.generateGame(response.action.gamePrompt, language);
+            const fullGame: GeneratedGameDefinition = { id: slugifyGameId(built.title), ...built };
+            const saved = await saveLocalGeneratedGame(fullGame, response.action.gamePrompt);
+            navigateToGeneratedGame(saved.id, saved.title, saved);
+            closeCompanion();
+          } catch (err) {
+            console.warn("[AiCompanion] game generation failed", err);
+            setErrorText(t("companion_game_generation_failed"));
+            speakFeedback(t("companion_game_generation_failed"), 0.95);
+          } finally {
+            setIsBuildingGame(false);
+          }
         }
       } catch (err) {
         console.warn("[AiCompanion] request failed", err);
@@ -222,10 +240,16 @@ export default function AiCompanion() {
                 </Text>
               </View>
             ))}
-            {isThinking && (
+            {isThinking && !isBuildingGame && (
               <View className="max-w-[85%] flex-row items-center gap-3 self-start rounded-3xl border border-zinc-200 bg-white px-5 py-4 dark:border-zinc-800 dark:bg-zinc-900">
                 <ActivityIndicator color="#0d9488" />
                 <Text className="text-base text-zinc-500 dark:text-zinc-400">{t("companion_thinking")}</Text>
+              </View>
+            )}
+            {isBuildingGame && (
+              <View className="max-w-[85%] flex-row items-center gap-3 self-start rounded-3xl border border-violet-200 bg-violet-50 px-5 py-4 dark:border-violet-800 dark:bg-violet-950/40">
+                <ActivityIndicator color="#6d28d9" />
+                <Text className="text-base text-violet-700 dark:text-violet-300">{t("companion_building_game")}</Text>
               </View>
             )}
             {errorText && (
@@ -240,11 +264,13 @@ export default function AiCompanion() {
             style={{ paddingBottom: insets.bottom + 20 }}
           >
             <Text className="text-sm font-semibold text-zinc-500 dark:text-zinc-400">
-              {isThinking
-                ? t("companion_please_wait")
-                : isRecording
-                  ? t("companion_listening")
-                  : t("companion_tap_to_speak")}
+              {isBuildingGame
+                ? t("companion_building_game")
+                : isThinking
+                  ? t("companion_please_wait")
+                  : isRecording
+                    ? t("companion_listening")
+                    : t("companion_tap_to_speak")}
             </Text>
             <Pressable
               onPress={isRecording ? stopRecordingAndSend : startRecording}

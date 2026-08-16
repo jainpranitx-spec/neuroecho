@@ -38,7 +38,6 @@ export default function MainTabs() {
         tabBarActiveTintColor: "#0f766e",
         tabBarInactiveTintColor: "#52525b",
         headerTitleStyle: { fontWeight: "800", fontSize: 22 },
-        headerStyle: { height: 64 },
         tabBarStyle: { height: 76, paddingTop: 8, paddingBottom: 8 },
         tabBarLabelStyle: { fontSize: 14, fontWeight: "700" },
       }}

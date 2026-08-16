@@ -22,9 +22,10 @@ interface AccessibilityContextValue extends AccessibilityPreferences {
 
 const STORAGE_KEY = "neuroecho.accessibility.v1";
 const DEFAULTS: AccessibilityPreferences = {
-  // A slightly larger default makes the first launch comfortable without
-  // overriding the device's own Dynamic Type / font-size preference.
-  textSize: "large",
+  // Starts at the designed base size — bumping this up compounds with the
+  // OS's own font-size setting (common on seniors' phones) and overflows
+  // fixed-size UI. Users can opt into "Large"/"Extra Large" in Settings.
+  textSize: "standard",
   highContrast: false,
   reduceMotion: false,
   voiceFeedback: true,

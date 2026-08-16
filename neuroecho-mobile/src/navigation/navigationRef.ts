@@ -1,5 +1,6 @@
 import { createNavigationContainerRef } from "@react-navigation/native";
 import { RootStackParamList } from "./types";
+import { GeneratedGameDefinition } from "../lib/generatedGames";
 
 export const navigationRef = createNavigationContainerRef<RootStackParamList>();
 
@@ -27,5 +28,19 @@ export function navigateToTab(screenTarget: string): boolean {
   const tab = SCREEN_TO_TAB[screenTarget];
   if (!tab || !navigationRef.isReady()) return false;
   (navigationRef.navigate as (name: string, params?: object) => void)("Main", { screen: tab });
+  return true;
+}
+
+export function navigateToGeneratedGame(
+  gameId: string,
+  title: string,
+  localDefinition?: GeneratedGameDefinition
+): boolean {
+  if (!navigationRef.isReady()) return false;
+  (navigationRef.navigate as (name: string, params?: object) => void)("GeneratedGame", {
+    gameId,
+    title,
+    localDefinition,
+  });
   return true;
 }

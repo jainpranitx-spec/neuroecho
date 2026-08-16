@@ -43,8 +43,12 @@ export default function AccessibleText({ className, style, ...props }: TextProps
     <NativeText
       {...props}
       className={className}
-      allowFontScaling
-      maxFontSizeMultiplier={2}
+      // Our own Settings > Text Size control is the single source of truth
+      // for text scale. Leaving the OS's own allowFontScaling on at the
+      // same time compounded with it (e.g. 1.15x app scale x up to 2x OS
+      // scale on a phone with larger system text), which is what was
+      // overflowing badges, buttons, and rows across the app.
+      allowFontScaling={false}
       style={[
         { flexShrink: 1 },
         style,

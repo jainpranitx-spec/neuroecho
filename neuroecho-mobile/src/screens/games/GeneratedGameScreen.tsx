@@ -18,7 +18,10 @@ const ACCENTS = {
 };
 
 export default function GeneratedGameScreen({ route, navigation }: Props) {
-  const game = useMemo(() => getGeneratedGame(route.params.gameId), [route.params.gameId]);
+  const game = useMemo(
+    () => route.params.localDefinition ?? getGeneratedGame(route.params.gameId),
+    [route.params.gameId, route.params.localDefinition]
+  );
   const [roundIndex, setRoundIndex] = useState(0);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [completed, setCompleted] = useState(false);

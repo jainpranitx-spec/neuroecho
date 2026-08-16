@@ -1,6 +1,7 @@
 import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
 import { GameSession, GameType, StoryLieItem, UserProfile } from "./types";
 import { AppLanguage } from "./i18n";
+import { GeneratedGameDefinition } from "./generatedGames";
 
 const LANGUAGE_NAMES: Record<AppLanguage, string> = {
   en: "English",
@@ -22,7 +23,8 @@ Your job:
 2. Reply the way a kind human companion would — short, warm, plain-spoken sentences, never robotic, never more than 3 sentences. Avoid jargon. Write your reply entirely in ${languageName}, regardless of what language the user spoke in.
 3. Actively guide them: if they sound unsure or ask what they can do, offer 2-3 concrete spoken choices rather than making them figure out the interface.
 4. If they clearly ask to open, play, or go to something, set an action to take them straight there instead of just describing it. Two of the games — "spot-ai-lie" and "motion-match" — can also be started immediately: if the user's words imply they want to jump straight into playing, set action.startAfterNavigate to true so it begins automatically. Leave it false/omitted if they only asked to open or look at the game.
-5. If they are just chatting or asking a question with no navigation intent, set action.type to "none" and just respond conversationally.
+5. You can also invent brand-new games on the spot. If the user asks for a game that isn't one of the four listed above (for example "make me an Antakshari game", "create a game about birds", "I want a trivia game about the 1960s"), set action.type to "generate_game" and action.gamePrompt to a short clear description of the game they want, in their own words. Say something warm and excited that you're making it for them right now — do not describe the game's rules yourself, since it hasn't been built yet.
+6. If they are just chatting or asking a question with no navigation or game-creation intent, set action.type to "none" and just respond conversationally.
 
 Always respond ONLY with the required JSON structure.`;
 }
@@ -87,9 +89,10 @@ export interface CompanionTurn {
 }
 
 export interface CompanionAction {
-  type: "navigate_game" | "navigate_screen" | "none";
+  type: "navigate_game" | "navigate_screen" | "generate_game" | "none";
   target?: string;
   startAfterNavigate?: boolean;
+  gamePrompt?: string;
 }
 
 export interface CompanionResponse {
@@ -151,6 +154,33 @@ async function apiFetch<T>(
     await sleep(500);
     return fetchOnce<T>(path, fetchOptions, timeoutMs);
   }
+}
+
+function buildGameGenerationSystemInstruction(languageName: string) {
+  return `You design short cognitive mini-games for NeuroEcho, an app for older adults. You'll be given a plain-language request for a game (it may be silly, cultural, nostalgic, or specific — take it seriously and make something genuinely playable). Design a complete, self-contained game as data only (never code).
+
+You have exactly two round formats to build with:
+- "quiz": round.choices is a list of 3-5 answer options, exactly one with isCorrect true. Use this whenever the game has a clear right answer (trivia, spot-the-difference, categorization, etc.)
+- "challenge": round.choices is omitted. The player just does something off-screen (sing a line, recall a memory, say a word aloud) and taps a button to mark it done. Use this for anything performative, verbal, or open-ended that can't be multiple-choice — like Antakshari (a Bollywood song-chain game): each round gives a starting letter or theme and the player sings/says a matching song title, then taps done, and the next round reveals the next letter.
+
+Rules:
+- Pick "kind" as the dominant format for the whole game (it must match every round's shape).
+- Create 6-10 rounds with real variety — do not just repeat the same prompt with placeholders.
+- instructions: 2-4 short, plain-spoken steps a senior can follow without help.
+- Every round needs a warm, specific successMessage (not just "Correct!").
+- title should be short and friendly. description is one sentence sub-title.
+- Write all text in ${languageName}.
+- Respond ONLY with the required JSON structure.`;
+}
+
+function slugifyGameId(title: string): string {
+  const base = title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "")
+    .slice(0, 40);
+  const suffix = Math.random().toString(36).slice(2, 7);
+  return `local-${base || "game"}-${suffix}`;
 }
 
 export const api = {
@@ -255,7 +285,7 @@ export const api = {
                   type: {
                     type: SchemaType.STRING,
                     format: "enum",
-                    enum: ["navigate_game", "navigate_screen", "none"],
+                    enum: ["navigate_game", "navigate_screen", "generate_game", "none"],
                   },
                   target: {
                     type: SchemaType.STRING,
@@ -263,6 +293,10 @@ export const api = {
                     enum: [...VALID_GAMES, ...VALID_SCREENS],
                   },
                   startAfterNavigate: { type: SchemaType.BOOLEAN },
+                  gamePrompt: {
+                    type: SchemaType.STRING,
+                    description: "Only for generate_game: a short description of the new game to create",
+                  },
                 },
                 required: ["type"],
               },
@@ -306,4 +340,68 @@ export const api = {
       };
     }
   },
+
+  // Creates a brand-new game on the spot from a natural-language request
+  // (e.g. "an Antakshari game"). Data-only output — an id-less
+  // GeneratedGameDefinition the caller assigns a local id to and stores on
+  // this device only, via localGeneratedGames.ts.
+  generateGame: async (
+    prompt: string,
+    language: AppLanguage = "en"
+  ): Promise<Omit<GeneratedGameDefinition, "id">> => {
+    const apiKey = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
+    if (!apiKey) {
+      throw new ApiError("Gemini API key is missing. Add EXPO_PUBLIC_GEMINI_API_KEY to your .env.local file.");
+    }
+
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({
+      model: "gemini-3.6-flash",
+      systemInstruction: buildGameGenerationSystemInstruction(LANGUAGE_NAMES[language]),
+      generationConfig: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: SchemaType.OBJECT,
+          properties: {
+            title: { type: SchemaType.STRING },
+            description: { type: SchemaType.STRING },
+            kind: { type: SchemaType.STRING, format: "enum", enum: ["quiz", "challenge"] },
+            accent: { type: SchemaType.STRING, format: "enum", enum: ["teal", "blue", "amber", "emerald"] },
+            instructions: { type: SchemaType.ARRAY, items: { type: SchemaType.STRING }, minItems: 2, maxItems: 4 },
+            rounds: {
+              type: SchemaType.ARRAY,
+              minItems: 6,
+              maxItems: 10,
+              items: {
+                type: SchemaType.OBJECT,
+                properties: {
+                  prompt: { type: SchemaType.STRING },
+                  instruction: { type: SchemaType.STRING },
+                  choices: {
+                    type: SchemaType.ARRAY,
+                    items: {
+                      type: SchemaType.OBJECT,
+                      properties: {
+                        label: { type: SchemaType.STRING },
+                        isCorrect: { type: SchemaType.BOOLEAN },
+                      },
+                      required: ["label", "isCorrect"],
+                    },
+                  },
+                  successMessage: { type: SchemaType.STRING },
+                },
+                required: ["prompt", "successMessage"],
+              },
+            },
+          },
+          required: ["title", "description", "kind", "accent", "instructions", "rounds"],
+        },
+      },
+    });
+
+    const result = await model.generateContent(`Create a game for this request: ${prompt}`);
+    return JSON.parse(result.response.text()) as Omit<GeneratedGameDefinition, "id">;
+  },
 };
+
+export { slugifyGameId };

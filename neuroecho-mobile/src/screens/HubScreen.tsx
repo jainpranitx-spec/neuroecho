@@ -11,6 +11,7 @@ import { useLanguage } from "../context/LanguageContext";
 import { TranslationKey } from "../lib/i18n";
 import { GENERATED_GAMES } from "../lib/generatedGames";
 import { getLocalGameRequests, LocalGameRequest, requestNewGame } from "../lib/gameRequests";
+import { getLocalGeneratedGames, LocalGeneratedGame } from "../lib/localGeneratedGames";
 import { useAccessibility } from "../context/AccessibilityContext";
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
@@ -34,6 +35,7 @@ export default function HubScreen() {
   const { textSize, reduceMotion } = useAccessibility();
   const stackCards = width < 370 || fontScale > 1.2 || textSize === "extraLarge";
   const [analytics, setAnalytics] = useState(DEFAULT_ANALYTICS);
+  const [localGames, setLocalGames] = useState<LocalGeneratedGame[]>([]);
   const [requests, setRequests] = useState<LocalGameRequest[]>([]);
   const [requestOpen, setRequestOpen] = useState(false);
   const [gameIdea, setGameIdea] = useState("");
@@ -47,6 +49,7 @@ export default function HubScreen() {
 
   useFocusEffect(useCallback(() => {
     getLocalGameRequests().then(setRequests).catch(() => setRequests([]));
+    getLocalGeneratedGames().then(setLocalGames).catch(() => setLocalGames([]));
   }, []));
 
   const requestedIds = useMemo(() => new Set(requests.map((request) => request.id)), [requests]);
@@ -123,6 +126,33 @@ export default function HubScreen() {
           </Pressable>
         ))}
       </View>
+
+      {localGames.length > 0 && (
+        <View className="gap-3">
+          <Text accessibilityRole="header" className="text-2xl font-extrabold text-zinc-950 dark:text-white">{t("hub_your_games")}</Text>
+          <Text className="text-base leading-relaxed text-zinc-700 dark:text-zinc-300">{t("hub_your_games_hint")}</Text>
+          {localGames.map((game) => (
+            <Pressable
+              key={game.id}
+              onPress={() => navigation.navigate("GeneratedGame", { gameId: game.id, title: game.title, localDefinition: game })}
+              accessibilityRole="button"
+              className={`min-h-32 gap-4 rounded-3xl border-2 border-amber-300 bg-amber-50 p-5 dark:border-amber-700 dark:bg-amber-950/40 ${stackCards ? "items-start" : "flex-row items-center"}`}
+            >
+              <View className="rounded-3xl bg-amber-200 p-4 dark:bg-amber-900/60"><Sparkles size={38} color="#b45309" /></View>
+              <View className="min-w-0 flex-1 gap-1.5">
+                <View className="flex-row items-center gap-2">
+                  <Text className="text-xl font-extrabold text-zinc-950 dark:text-white">{game.title}</Text>
+                  <View className="rounded-full bg-amber-200 px-2.5 py-1 dark:bg-amber-900/60">
+                    <Text className="text-xs font-bold text-amber-900 dark:text-amber-200">{t("hub_private_badge")}</Text>
+                  </View>
+                </View>
+                <Text className="text-base leading-relaxed text-zinc-700 dark:text-zinc-200">{game.description}</Text>
+                <Text className="text-base font-bold text-amber-800 dark:text-amber-300">{t("hub_start_game")} →</Text>
+              </View>
+            </Pressable>
+          ))}
+        </View>
+      )}
 
       <View className="gap-4 rounded-3xl border-2 border-dashed border-teal-500 bg-white p-5 dark:bg-zinc-900">
         <View className="flex-row items-start gap-3">
