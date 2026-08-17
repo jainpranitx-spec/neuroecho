@@ -161,6 +161,91 @@ export const GENERATED_GAMES: GeneratedGameDefinition[] = [
         "successMessage": "Exactly! Each player starts with 8 Pawns lining the front row."
       }
     ]
+  },
+  {
+    "id": "dbe3ad0c-ee0e-43e3-9c71-dfc9ab9c6517",
+    "title": "Building the Chessboard",
+    "description": "A relaxing quiz about setting up and identifying chess pieces.",
+    "kind": "quiz",
+    "accent": "teal",
+    "instructions": [
+      "Read each question carefully.",
+      "Select the correct answer to complete your chessboard setup."
+    ],
+    "rounds": [
+      {
+        "prompt": "When setting up a chessboard, which square color should be at your bottom-right corner?",
+        "choices": [
+          {
+            "label": "Light square",
+            "isCorrect": true
+          },
+          {
+            "label": "Dark square",
+            "isCorrect": false
+          },
+          {
+            "label": "Any square",
+            "isCorrect": false
+          }
+        ],
+        "successMessage": "Correct! A light square is always on your right corner."
+      },
+      {
+        "prompt": "On which square does the Queen always start?",
+        "choices": [
+          {
+            "label": "On her matching color square",
+            "isCorrect": true
+          },
+          {
+            "label": "On the opposing color square",
+            "isCorrect": false
+          },
+          {
+            "label": "On any central square",
+            "isCorrect": false
+          }
+        ],
+        "successMessage": "Wonderful! The Queen always starts on a square matching her color."
+      },
+      {
+        "prompt": "How many pawns does each player place on the second row?",
+        "choices": [
+          {
+            "label": "6 pawns",
+            "isCorrect": false
+          },
+          {
+            "label": "8 pawns",
+            "isCorrect": true
+          },
+          {
+            "label": "10 pawns",
+            "isCorrect": false
+          }
+        ],
+        "successMessage": "Great job! Each player starts with 8 pawns forming the front line."
+      },
+      {
+        "prompt": "Which pieces stand directly next to the King and Queen?",
+        "choices": [
+          {
+            "label": "Knights",
+            "isCorrect": false
+          },
+          {
+            "label": "Rooks",
+            "isCorrect": false
+          },
+          {
+            "label": "Bishops",
+            "isCorrect": true
+          }
+        ],
+        "successMessage": "Excellently answered! The two Bishops flank the King and Queen."
+      }
+    ]
   }
 ];
 
