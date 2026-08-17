@@ -59,6 +59,108 @@ export const GENERATED_GAMES: GeneratedGameDefinition[] = [
         "successMessage": "Splendid finish! Music is a wonderful journey through time."
       }
     ]
+  },
+  {
+    "id": "6587ff35-7d1f-4787-b876-c21af4a2af90",
+    "title": "Chess Basics & Setup",
+    "description": "Test your knowledge of chess pieces, board layout, and basic setup rules.",
+    "kind": "quiz",
+    "accent": "teal",
+    "instructions": [
+      "Read each question about chess pieces and board setup.",
+      "Select the correct answer from the options given.",
+      "Take your time to enjoy exploring classic chess rules."
+    ],
+    "rounds": [
+      {
+        "prompt": "Which piece is placed in the very corners of the chess board at the start?",
+        "choices": [
+          {
+            "label": "Rook",
+            "isCorrect": true
+          },
+          {
+            "label": "Knight",
+            "isCorrect": false
+          },
+          {
+            "label": "Bishop",
+            "isCorrect": false
+          },
+          {
+            "label": "Pawn",
+            "isCorrect": false
+          }
+        ],
+        "successMessage": "Correct! Rooks start in the four corners of the chess board."
+      },
+      {
+        "prompt": "When placing pieces, which square should the White Queen be placed on?",
+        "choices": [
+          {
+            "label": "A dark square",
+            "isCorrect": false
+          },
+          {
+            "label": "A light (white) square",
+            "isCorrect": true
+          },
+          {
+            "label": "Any corner square",
+            "isCorrect": false
+          },
+          {
+            "label": "In front of the King",
+            "isCorrect": false
+          }
+        ],
+        "successMessage": "Spot on! The rule is 'Queen on her own color', so White Queen goes on a light square."
+      },
+      {
+        "prompt": "How does the Knight move on the chess board?",
+        "choices": [
+          {
+            "label": "Only diagonally",
+            "isCorrect": false
+          },
+          {
+            "label": "In an 'L' shape",
+            "isCorrect": true
+          },
+          {
+            "label": "Straight ahead only",
+            "isCorrect": false
+          },
+          {
+            "label": "Three squares sideways",
+            "isCorrect": false
+          }
+        ],
+        "successMessage": "Well done! Knights move in an L-shape and are the only pieces that can jump over others."
+      },
+      {
+        "prompt": "How many Pawns does each player have at the start of a game?",
+        "choices": [
+          {
+            "label": "6 Pawns",
+            "isCorrect": false
+          },
+          {
+            "label": "8 Pawns",
+            "isCorrect": true
+          },
+          {
+            "label": "10 Pawns",
+            "isCorrect": false
+          },
+          {
+            "label": "12 Pawns",
+            "isCorrect": false
+          }
+        ],
+        "successMessage": "Exactly! Each player starts with 8 Pawns lining the front row."
+      }
+    ]
   }
 ];
 
