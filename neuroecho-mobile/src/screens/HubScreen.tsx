@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, Modal, Pressable, TextInput, View, useWindowDimensions } from "react-native";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -52,8 +52,14 @@ export default function HubScreen() {
     getLocalGeneratedGames().then(setLocalGames).catch(() => setLocalGames([]));
   }, []));
 
-  const requestedIds = useMemo(() => new Set(requests.map((request) => request.id)), [requests]);
-  const availableGeneratedGames = GENERATED_GAMES.filter((game) => requestedIds.has(game.id));
+  // Any game merged into GENERATED_GAMES ships in the app bundle for every
+  // install — matching what game_request_explanation already tells users
+  // ("It will appear here after it is approved and released"). Previously
+  // this only showed a merged game to the specific device that requested
+  // it (via a local AsyncStorage record), which contradicted that copy and
+  // meant games requested from outside the app (e.g. directly via the API)
+  // could never appear anywhere.
+  const availableGeneratedGames = GENERATED_GAMES;
   const pendingRequests = requests.filter((request) => !GENERATED_GAMES.some((game) => game.id === request.id));
 
   const submitGameRequest = async () => {
