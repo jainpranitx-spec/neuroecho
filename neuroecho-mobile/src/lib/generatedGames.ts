@@ -246,6 +246,108 @@ export const GENERATED_GAMES: GeneratedGameDefinition[] = [
         "successMessage": "Excellently answered! The two Bishops flank the King and Queen."
       }
     ]
+  },
+  {
+    "id": "eb1461a3-6d5f-4fb3-992e-2632f77e123c",
+    "title": "Carrom Board Tactics",
+    "description": "Test your knowledge of Carrom rules, striking techniques, and board angles in this relaxing game.",
+    "kind": "quiz",
+    "accent": "amber",
+    "instructions": [
+      "Read each Carrom situation carefully.",
+      "Select the best shot, rule, or technique to score points.",
+      "Take your time and enjoy playing at your own pace."
+    ],
+    "rounds": [
+      {
+        "prompt": "Which piece on the Carrom board is worth the highest points and requires a cover?",
+        "choices": [
+          {
+            "label": "The Red Queen",
+            "isCorrect": true
+          },
+          {
+            "label": "The White Piece",
+            "isCorrect": false
+          },
+          {
+            "label": "The Black Piece",
+            "isCorrect": false
+          },
+          {
+            "label": "The Striker",
+            "isCorrect": false
+          }
+        ],
+        "successMessage": "Correct! The Queen is worth the most points and must be covered by pocketing another piece on the next shot."
+      },
+      {
+        "prompt": "If you pocket the Queen, what must you do on your next shot to claim her?",
+        "choices": [
+          {
+            "label": "Pocket any of your carrom men as a cover",
+            "isCorrect": true
+          },
+          {
+            "label": "Pocket the striker into a corner",
+            "isCorrect": false
+          },
+          {
+            "label": "Pass your turn to the opponent",
+            "isCorrect": false
+          },
+          {
+            "label": "Flick the opponent's piece",
+            "isCorrect": false
+          }
+        ],
+        "successMessage": "Right! Pocketing a cover piece confirms your claim on the Queen."
+      },
+      {
+        "prompt": "What happens if you accidentally pocket the Striker during your turn?",
+        "choices": [
+          {
+            "label": "It is a foul, and you pay a penalty piece",
+            "isCorrect": true
+          },
+          {
+            "label": "You automatically win the board",
+            "isCorrect": false
+          },
+          {
+            "label": "You get two extra free turns",
+            "isCorrect": false
+          },
+          {
+            "label": "The game restarts immediately",
+            "isCorrect": false
+          }
+        ],
+        "successMessage": "Spot on! Pocketing the striker is a foul, incurring a penalty piece."
+      },
+      {
+        "prompt": "Which shot angle uses the wooden side frame to bounce the striker towards a hidden piece?",
+        "choices": [
+          {
+            "label": "Bank Shot",
+            "isCorrect": true
+          },
+          {
+            "label": "Direct Cut Shot",
+            "isCorrect": false
+          },
+          {
+            "label": "Center Break",
+            "isCorrect": false
+          },
+          {
+            "label": "Straight Push",
+            "isCorrect": false
+          }
+        ],
+        "successMessage": "Well done! A bank shot uses the frame rebound to hit hard-to-reach pieces."
+      }
+    ]
   }
 ];
 
