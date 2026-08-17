@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import Text from "../../components/AccessibleText";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { CameraView, useCameraPermissions } from "expo-camera";
-import { CameraOff, CheckCircle2, Play, XCircle } from "lucide-react-native";
+import { CameraOff, CheckCircle2, RefreshCw, ScanEye, XCircle, Play } from "lucide-react-native";
 import { MOTION_TARGETS } from "../../lib/gameData";
 import { speakFeedback } from "../../lib/speech";
 import { api } from "../../lib/api";
@@ -12,8 +12,15 @@ import HowToPlay from "../../components/HowToPlay";
 const INSTRUCTIONS = [
   "Tap 'Start' to begin the stage.",
   "Watch the target shown at the top of the camera box.",
-  "If it's a Fruit or Food, tap 'RAISE LEFT'. If it's a Machine or Tool, tap 'RAISE RIGHT'. Answer quickly!",
+  "Raise your hand toward the side of the screen matching the answer — the camera checks about once a second — or just tap 'RAISE LEFT' / 'RAISE RIGHT' below any time.",
+  "If the camera reads your hand backwards, tap 'Swap Sides' once to fix it for the rest of the game.",
 ];
+
+// How often we snap a photo and ask Gemini which side a raised hand is on.
+// Faster than this wastes API calls on frames where nothing changed; slower
+// makes the game feel unresponsive.
+const DETECTION_INTERVAL_MS = 1200;
+
 import { registerScreenActions, clearScreenActions } from "../../lib/screenActions";
 
 export default function MotionMatchScreen() {
@@ -29,6 +36,14 @@ export default function MotionMatchScreen() {
 
   const [permission, requestPermission] = useCameraPermissions();
   const [cameraError, setCameraError] = useState<string | null>(null);
+  const cameraRef = useRef<CameraView>(null);
+  const [cameraReady, setCameraReady] = useState(false);
+  const [isDetecting, setIsDetecting] = useState(false);
+  // Front-camera mirroring conventions differ by device/platform — rather
+  // than guess, let the player fix it in one tap if the camera reads their
+  // hand backwards.
+  const [swapSides, setSwapSides] = useState(false);
+  const detectionInFlightRef = useRef(false);
 
   const [lastActionResult, setLastActionResult] = useState<{
     correct: boolean;
@@ -59,6 +74,7 @@ export default function MotionMatchScreen() {
     setScore(0);
     setCombo(0);
     setLastActionResult(null);
+    setCameraReady(false);
     startTimeRef.current = Date.now();
 
     try {
@@ -105,6 +121,48 @@ export default function MotionMatchScreen() {
     setCurrentTargetIndex((prev) => (prev + 1) % targetList.length);
     startTimeRef.current = Date.now();
   };
+
+  // The detection loop below fires on a timer, not a render, so it always
+  // needs the LATEST handleGestureAction (which closes over currentTarget,
+  // combo, etc.) — not the one that existed when the interval was set up.
+  // Same ref-forwarding pattern as startGameRef above.
+  const handleGestureActionRef = useRef(handleGestureAction);
+  handleGestureActionRef.current = handleGestureAction;
+
+  // Real hand-side detection: Expo Go can't load real-time frame-processor
+  // camera libraries (they need a custom native dev client), so instead we
+  // snap a still photo periodically and classify it with Gemini vision —
+  // genuine detection from an actual photo, just not continuous tracking.
+  useEffect(() => {
+    if (!isPlaying || !permission?.granted || !cameraReady) return;
+
+    const interval = setInterval(async () => {
+      if (detectionInFlightRef.current || actionLockRef.current) return;
+      detectionInFlightRef.current = true;
+      setIsDetecting(true);
+      try {
+        const photo = await cameraRef.current?.takePictureAsync({
+          quality: 0.3,
+          base64: true,
+          skipProcessing: true,
+        });
+        if (photo?.base64) {
+          const gesture = await api.classifyHandGesture(photo.base64);
+          if (gesture !== "none") {
+            const resolved = swapSides ? (gesture === "left" ? "right" : "left") : gesture;
+            handleGestureActionRef.current(resolved);
+          }
+        }
+      } catch (err) {
+        console.warn("[MotionMatch] gesture detection failed", err);
+      } finally {
+        detectionInFlightRef.current = false;
+        setIsDetecting(false);
+      }
+    }, DETECTION_INTERVAL_MS);
+
+    return () => clearInterval(interval);
+  }, [isPlaying, permission?.granted, cameraReady, swapSides]);
 
   const handleEndGame = () => {
     setIsPlaying(false);
@@ -171,18 +229,35 @@ export default function MotionMatchScreen() {
                 <Text className="text-sm font-bold text-white">Start</Text>
               </Pressable>
             ) : (
-              <Pressable
-                onPress={handleEndGame}
-                className="rounded-2xl bg-zinc-800 px-4 py-2.5"
-              >
-                <Text className="text-sm font-semibold text-zinc-300">End Stage</Text>
-              </Pressable>
+              <View className="flex-row items-center gap-2">
+                <Pressable
+                  onPress={() => setSwapSides((prev) => !prev)}
+                  accessibilityLabel="Swap left and right detection"
+                  className={`flex-row items-center gap-1.5 rounded-2xl px-3 py-2.5 ${
+                    swapSides ? "bg-amber-600" : "bg-zinc-800"
+                  }`}
+                >
+                  <RefreshCw size={14} color="white" />
+                  <Text className="text-xs font-semibold text-white">Swap Sides</Text>
+                </Pressable>
+                <Pressable
+                  onPress={handleEndGame}
+                  className="rounded-2xl bg-zinc-800 px-4 py-2.5"
+                >
+                  <Text className="text-sm font-semibold text-zinc-300">End Stage</Text>
+                </Pressable>
+              </View>
             )}
           </View>
 
           <View className="h-64 items-center justify-center overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900">
             {hasCamera && (
-              <CameraView style={StyleSheet.absoluteFill} facing="front" />
+              <CameraView
+                ref={cameraRef}
+                style={StyleSheet.absoluteFill}
+                facing="front"
+                onCameraReady={() => setCameraReady(true)}
+              />
             )}
             {hasCamera && (
               <View
@@ -203,17 +278,21 @@ export default function MotionMatchScreen() {
 
             <View className="absolute top-6 z-10 max-w-xs flex-row items-center gap-4 rounded-3xl border-2 border-teal-400/80 bg-zinc-900/90 p-5">
               <Text className="text-4xl">{currentTarget.emoji}</Text>
-              <View>
-                <Text className="text-xs font-bold uppercase tracking-wider text-teal-400">
-                  Target Object
-                </Text>
-                <Text className="text-xl font-black text-white">{currentTarget.label}</Text>
-                <Text className="text-xs text-zinc-300">
-                  Category:{" "}
-                  <Text className="font-bold uppercase text-amber-400">
-                    {currentTarget.category}
+              <View className="flex-1">
+                <View className="flex-row items-center gap-1.5">
+                  <Text className="text-xs font-bold uppercase tracking-wider text-teal-400">
+                    Target Object
                   </Text>
-                </Text>
+                  {hasCamera && (
+                    <View className="flex-row items-center gap-1">
+                      <ScanEye size={11} color={isDetecting ? "#5eead4" : "#71717a"} />
+                      <Text className={`text-[10px] font-semibold ${isDetecting ? "text-teal-300" : "text-zinc-500"}`}>
+                        {cameraReady ? (isDetecting ? "reading" : "watching") : "starting"}
+                      </Text>
+                    </View>
+                  )}
+                </View>
+                <Text className="text-xl font-black text-white">{currentTarget.label}</Text>
               </View>
             </View>
 

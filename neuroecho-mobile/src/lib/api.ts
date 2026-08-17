@@ -402,6 +402,45 @@ export const api = {
     const result = await model.generateContent(`Create a game for this request: ${prompt}`);
     return JSON.parse(result.response.text()) as Omit<GeneratedGameDefinition, "id">;
   },
+
+  // Real hand-side detection for Motion Match. Expo Go can't load real-time
+  // frame-processor camera libraries (react-native-vision-camera etc. need
+  // a custom native dev client), so this classifies periodic still photos
+  // with Gemini's vision input instead — not true real-time tracking, but
+  // genuine on-photo detection rather than the old fake tap-only "sensor".
+  classifyHandGesture: async (imageBase64: string): Promise<"left" | "right" | "none"> => {
+    const apiKey = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
+    if (!apiKey) return "none";
+
+    try {
+      const genAI = new GoogleGenerativeAI(apiKey);
+      const model = genAI.getGenerativeModel({
+        model: "gemini-3.6-flash",
+        systemInstruction:
+          "You are a hand-position detector for a motor coordination game. Look at the photo, a front-facing camera view of a person. Determine if they have clearly raised one hand up near shoulder height or higher. Respond purely based on which half of the PHOTO the raised hand appears in — ignore whose anatomical hand it is. Respond 'left' if the raised hand is in the left half of the image, 'right' if in the right half, or 'none' if no hand is clearly raised, both hands are raised, or no person is visible.",
+        generationConfig: {
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: SchemaType.OBJECT,
+            properties: {
+              gesture: { type: SchemaType.STRING, format: "enum", enum: ["left", "right", "none"] },
+            },
+            required: ["gesture"],
+          },
+        },
+      });
+
+      const result = await model.generateContent([
+        { inlineData: { data: imageBase64, mimeType: "image/jpeg" } },
+        { text: "Which hand is raised?" },
+      ]);
+      const parsed = JSON.parse(result.response.text()) as { gesture: "left" | "right" | "none" };
+      return parsed.gesture;
+    } catch (error) {
+      console.error("Gemini Hand Gesture Error:", error);
+      return "none";
+    }
+  },
 };
 
 export { slugifyGameId };
