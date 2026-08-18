@@ -332,6 +332,91 @@ export const GENERATED_GAMES: GeneratedGameDefinition[] = [
         "successMessage": "Wonderful! A warm stone provides the perfect cozy resting spot."
       }
     ]
+  },
+  {
+    "id": "501b558c-d7d3-4681-b098-b28b65ce1d68",
+    "title": "Build Chess",
+    "description": "Explore the classic game of chess by identifying piece setups and basic movements.",
+    "kind": "quiz",
+    "accent": "emerald",
+    "instructions": [
+      "Read each question about setting up chess pieces on the board.",
+      "Select the best answer from the given choices."
+    ],
+    "rounds": [
+      {
+        "prompt": "Where are the Rooks placed at the start of a game?",
+        "choices": [
+          {
+            "label": "In the four corners",
+            "isCorrect": true
+          },
+          {
+            "label": "In the middle row",
+            "isCorrect": false
+          },
+          {
+            "label": "In front of the Pawns",
+            "isCorrect": false
+          }
+        ],
+        "successMessage": "Correct! Rooks always begin in the four corners of the board."
+      },
+      {
+        "prompt": "How many Pawns does each player start with?",
+        "choices": [
+          {
+            "label": "6 Pawns",
+            "isCorrect": false
+          },
+          {
+            "label": "8 Pawns",
+            "isCorrect": true
+          },
+          {
+            "label": "10 Pawns",
+            "isCorrect": false
+          }
+        ],
+        "successMessage": "Well done! Each player starts with a front row of 8 Pawns."
+      },
+      {
+        "prompt": "Which powerful piece sits next to the King on the back row?",
+        "choices": [
+          {
+            "label": "Queen",
+            "isCorrect": true
+          },
+          {
+            "label": "Bishop",
+            "isCorrect": false
+          },
+          {
+            "label": "Knight",
+            "isCorrect": false
+          }
+        ],
+        "successMessage": "Spot on! The Queen sits directly beside the King."
+      },
+      {
+        "prompt": "Which chess piece moves in a distinct 'L' shape?",
+        "choices": [
+          {
+            "label": "Bishop",
+            "isCorrect": false
+          },
+          {
+            "label": "Knight",
+            "isCorrect": true
+          },
+          {
+            "label": "Rook",
+            "isCorrect": false
+          }
+        ],
+        "successMessage": "Excellent! The Knight jumps over other pieces in an 'L' shape."
+      }
+    ]
   }
 ];
 
