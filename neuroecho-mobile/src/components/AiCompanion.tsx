@@ -199,10 +199,10 @@ export default function AiCompanion() {
         accessibilityLabel={t("companion_fab_label")}
         accessibilityRole="button"
         accessibilityHint={t("companion_tap_to_speak")}
-        className="absolute right-5 h-18 w-18 items-center justify-center rounded-full border-2 border-white bg-teal-700 shadow-lg"
-        style={{ bottom: insets.bottom + (tabBarVisible ? 92 : 24) }}
+        className="absolute right-5 h-24 w-24 items-center justify-center rounded-full border-2 border-white bg-teal-700 shadow-lg"
+        style={{ bottom: insets.bottom + (tabBarVisible ? 100 : 28) }}
       >
-        <Mic size={28} color="white" />
+        <Mic size={40} color="white" />
       </Pressable>
 
       <Modal visible={isOpen} animationType={reduceMotion ? "none" : "slide"} onRequestClose={closeCompanion}>

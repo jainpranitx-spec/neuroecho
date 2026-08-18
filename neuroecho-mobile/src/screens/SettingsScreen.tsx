@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from "react";
 import Text from "../components/AccessibleText";
 import { AccessibilityInfo, Platform, Pressable, View, useWindowDimensions } from "react-native";
+import { useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import TabScreenScroll from "../components/TabScreenScroll";
-import { Accessibility, CheckCircle2, Eye, Globe, Moon, PhoneCall, Save, ShieldCheck, Sliders, Smartphone, Sun, Type, Volume2 } from "lucide-react-native";
+import { Accessibility, ArrowRight, CheckCircle2, Eye, Globe, MessageSquareHeart, Moon, PhoneCall, Save, ShieldCheck, Sliders, Smartphone, Sun, Type, Volume2 } from "lucide-react-native";
 import { speakFeedback } from "../lib/speech";
 import { api } from "../lib/api";
 import { UserProfile } from "../lib/types";
@@ -11,6 +13,9 @@ import { useAudioOutput } from "../context/AudioOutputContext";
 import { useLanguage } from "../context/LanguageContext";
 import { LANGUAGES, TranslationKey } from "../lib/i18n";
 import { AppTextSize, useAccessibility } from "../context/AccessibilityContext";
+import { RootStackParamList } from "../navigation/types";
+
+type Nav = NativeStackNavigationProp<RootStackParamList>;
 
 type SettingsProfile = Pick<
   UserProfile,
@@ -42,6 +47,7 @@ const THEME_OPTIONS: { pref: ThemePreference; labelKey: TranslationKey; icon: ty
 ];
 
 export default function SettingsScreen() {
+  const navigation = useNavigation<Nav>();
   const { preference, setPreference } = useTheme();
   const { output, setOutput } = useAudioOutput();
   const { language, setLanguage, t } = useLanguage();
@@ -407,6 +413,31 @@ export default function SettingsScreen() {
             ))}
           </View>
         </View>
+
+        {/* Feedback */}
+        <Pressable
+          onPress={() => navigation.navigate("Feedback")}
+          accessibilityRole="button"
+          className={`gap-4 rounded-2xl border-2 border-dashed border-teal-400 bg-teal-50 p-4 dark:border-teal-700 dark:bg-teal-950/30 ${stackControls ? "items-start" : "flex-row items-center justify-between"}`}
+        >
+          <View className="flex-1 flex-row items-start gap-3">
+            <View className="mt-0.5 rounded-2xl bg-teal-700 p-2.5">
+              <MessageSquareHeart size={20} color="white" />
+            </View>
+            <View className="flex-1">
+              <Text className="text-base font-bold text-zinc-900 dark:text-zinc-100">
+                {t("settings_feedback_title")}
+              </Text>
+              <Text className="text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
+                {t("settings_feedback_desc")}
+              </Text>
+            </View>
+          </View>
+          <View className="flex-row items-center gap-1.5 self-start rounded-2xl bg-teal-700 px-4 py-2.5">
+            <Text className="text-sm font-bold text-white">{t("settings_feedback_button")}</Text>
+            <ArrowRight size={16} color="white" />
+          </View>
+        </Pressable>
 
         <View className={`gap-4 border-t border-zinc-200 pt-4 dark:border-zinc-800 ${stackControls ? "items-stretch" : "flex-row items-center justify-between"}`}>
           {savedSuccess ? (

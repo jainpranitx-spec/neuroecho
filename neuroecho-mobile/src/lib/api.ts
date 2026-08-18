@@ -101,6 +101,14 @@ export interface CompanionResponse {
   action: CompanionAction;
 }
 
+export interface FeedbackMessage {
+  id: string;
+  deviceId: string;
+  direction: "user_to_dev" | "dev_to_user";
+  message: string;
+  createdAt: string;
+}
+
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -201,6 +209,15 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ prompt }),
       timeoutMs: 20_000,
+    }),
+
+  getFeedback: (deviceId: string) =>
+    apiFetch<{ messages: FeedbackMessage[] }>(`/api/feedback?deviceId=${encodeURIComponent(deviceId)}`),
+
+  sendFeedback: (deviceId: string, message: string) =>
+    apiFetch<{ message: FeedbackMessage }>("/api/feedback", {
+      method: "POST",
+      body: JSON.stringify({ deviceId, message }),
     }),
 
   saveSession: (session: SaveSessionInput) =>

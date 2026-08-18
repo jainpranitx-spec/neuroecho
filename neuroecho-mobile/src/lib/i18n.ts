@@ -44,6 +44,16 @@ const translations = {
     game_request_error: "We could not send your request. Please check your connection and try again.",
     game_request_pending: "Games being prepared",
 
+    settings_feedback_title: "Send Feedback",
+    settings_feedback_desc: "Talk directly with the people building NeuroEcho — tell us what's working, what's confusing, or what you'd like to see.",
+    settings_feedback_button: "Open Feedback",
+    feedback_intro: "Send a message to the NeuroEcho team, and see their replies here.",
+    feedback_empty: "No messages yet. Say hello, or tell us what you think!",
+    feedback_placeholder: "Type your message…",
+    feedback_send: "Send",
+    feedback_send_error: "Could not send your message. Please check your connection and try again.",
+    feedback_dev_label: "NeuroEcho Team",
+
     analytics_title: "Cognitive Analytics & Progress",
     analytics_subtitle: "Breakdown of memory recall, visual processing, sequencing, and motor control.",
     analytics_badge: "Cognitive Report • Doctor & Caregiver View",
@@ -167,6 +177,16 @@ const translations = {
     game_request_success: "आपका अनुरोध भेज दिया गया है। समीक्षा और रिलीज़ के बाद खेल यहां दिखाई देगा।",
     game_request_error: "अनुरोध नहीं भेजा जा सका। इंटरनेट जांचें और फिर कोशिश करें।",
     game_request_pending: "तैयार किए जा रहे खेल",
+
+    settings_feedback_title: "फ़ीडबैक भेजें",
+    settings_feedback_desc: "न्यूरोइको बनाने वाली टीम से सीधे बात करें — बताएं क्या अच्छा काम कर रहा है, क्या समझ नहीं आ रहा, या आप क्या देखना चाहेंगे।",
+    settings_feedback_button: "फ़ीडबैक खोलें",
+    feedback_intro: "न्यूरोइको टीम को संदेश भेजें, और उनके जवाब यहां देखें।",
+    feedback_empty: "अभी कोई संदेश नहीं है। नमस्ते कहें, या अपनी राय बताएं!",
+    feedback_placeholder: "अपना संदेश लिखें…",
+    feedback_send: "भेजें",
+    feedback_send_error: "आपका संदेश नहीं भेजा जा सका। इंटरनेट जांचें और फिर कोशिश करें।",
+    feedback_dev_label: "न्यूरोइको टीम",
 
     analytics_title: "संज्ञानात्मक विश्लेषण और प्रगति",
     analytics_subtitle: "स्मृति, दृश्य प्रसंस्करण, क्रम और मोटर नियंत्रण का विवरण।",

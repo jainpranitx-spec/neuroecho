@@ -18,6 +18,7 @@ export type RootStackParamList = {
   // generation. Games opened from the Hub list (already-saved games) can
   // omit it and let GeneratedGameScreen look the id up instead.
   GeneratedGame: { gameId: string; title: string; localDefinition?: GeneratedGameDefinition };
+  Feedback: undefined;
 };
 
 declare global {

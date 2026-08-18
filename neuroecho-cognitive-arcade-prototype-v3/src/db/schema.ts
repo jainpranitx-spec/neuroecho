@@ -56,3 +56,16 @@ export const cognitiveInsights = pgTable("cognitive_insights", {
   recommendation: text("recommendation").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
+
+// A simple two-way feedback thread. deviceId is a random id the app
+// generates once and stores locally (AsyncStorage) — not a real user
+// account, just enough to group one device's messages together and let a
+// developer's reply (direction: 'dev_to_user', inserted directly via the
+// database) show back up for that same device.
+export const feedbackMessages = pgTable("feedback_messages", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  deviceId: text("device_id").notNull(),
+  direction: text("direction").notNull(), // 'user_to_dev' | 'dev_to_user'
+  message: text("message").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
