@@ -246,6 +246,92 @@ export const GENERATED_GAMES: GeneratedGameDefinition[] = [
         "successMessage": "Excellently answered! The two Bishops flank the King and Queen."
       }
     ]
+  },
+  {
+    "id": "b519ae97-aadb-497c-947f-495f2d29d6e3",
+    "title": "Garden Snake Trail",
+    "description": "Guide a friendly garden snake through peaceful pathfinding puzzles and garden trivia.",
+    "kind": "quiz",
+    "accent": "emerald",
+    "instructions": [
+      "Read each navigation scenario carefully.",
+      "Choose the safest direction or correct step for the snake.",
+      "Take your time and enjoy the relaxed pathfinding journey."
+    ],
+    "rounds": [
+      {
+        "prompt": "The snake is slithering East across the grass. A sweet red apple is located directly above it to the North. Which direction should the snake turn?",
+        "choices": [
+          {
+            "label": "Turn Left toward the North",
+            "isCorrect": true
+          },
+          {
+            "label": "Turn Right toward the South",
+            "isCorrect": false
+          },
+          {
+            "label": "Keep slithering straight East",
+            "isCorrect": false
+          }
+        ],
+        "successMessage": "Correct! Turning left toward the North leads straight to the apple."
+      },
+      {
+        "prompt": "The snake is heading South toward a wooden garden wall. To keep moving safely without hitting the wall, what should it do?",
+        "choices": [
+          {
+            "label": "Turn East or West to steer away",
+            "isCorrect": true
+          },
+          {
+            "label": "Continue South into the wooden wall",
+            "isCorrect": false
+          },
+          {
+            "label": "Stop and reverse into its own path",
+            "isCorrect": false
+          }
+        ],
+        "successMessage": "Excellent move! Turning East or West safely changes the path along the wall."
+      },
+      {
+        "prompt": "The snake wants to gather garden fruits in order: first Apple, second Strawberry, third Pear. What is its very first target?",
+        "choices": [
+          {
+            "label": "Head toward the Apple",
+            "isCorrect": true
+          },
+          {
+            "label": "Head toward the Strawberry",
+            "isCorrect": false
+          },
+          {
+            "label": "Head toward the Pear",
+            "isCorrect": false
+          }
+        ],
+        "successMessage": "Spot on! Starting with the Apple keeps the sequence clear."
+      },
+      {
+        "prompt": "After a pleasant stroll through the flower beds, where would a gentle garden snake like to warm up and rest?",
+        "choices": [
+          {
+            "label": "A smooth stone warmed by the sun",
+            "isCorrect": true
+          },
+          {
+            "label": "A puddle of chilly water",
+            "isCorrect": false
+          },
+          {
+            "label": "A windy hilltop in the shade",
+            "isCorrect": false
+          }
+        ],
+        "successMessage": "Wonderful! A warm stone provides the perfect cozy resting spot."
+      }
+    ]
   }
 ];
 
