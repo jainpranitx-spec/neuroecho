@@ -1,5 +1,6 @@
 import React from "react";
-import { Image, Pressable } from "react-native";
+import { Image, Platform, Pressable } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { BarChart2, Brain, Mic, Settings as SettingsIcon } from "lucide-react-native";
 import HubScreen from "../screens/HubScreen";
@@ -40,12 +41,18 @@ function CompanionHeaderButton() {
 
 export default function MainTabs() {
   const { t } = useLanguage();
+  const insets = useSafeAreaInsets();
 
   return (
     <Tab.Navigator
       screenOptions={{
         headerRight: () => <CompanionHeaderButton />,
-        headerStyle: { height: 92, backgroundColor: "#2bb1be" },
+        // Only iOS headers include the safe-area inset in their configured
+        // height. This leaves Android's already-correct 92px header intact.
+        headerStyle: {
+          height: Platform.OS === "ios" ? insets.top + 72 : 92,
+          backgroundColor: "#2bb1be",
+        },
         headerShadowVisible: false,
         headerRightContainerStyle: { paddingRight: 12 },
         headerTitleContainerStyle: { left: 16, right: 96 },
