@@ -1,5 +1,5 @@
 import React from "react";
-import { Pressable } from "react-native";
+import { Image, Pressable } from "react-native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { BarChart2, Brain, Mic, Settings as SettingsIcon } from "lucide-react-native";
 import HubScreen from "../screens/HubScreen";
@@ -11,6 +11,17 @@ import { MainTabParamList } from "./types";
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
+function NeuroEchoLogo() {
+  return (
+    <Image
+      source={require("../../assets/neuroecho-logo.png")}
+      accessibilityLabel="NeuroEcho"
+      resizeMode="contain"
+      style={{ width: 200, height: 36 }}
+    />
+  );
+}
+
 function CompanionHeaderButton() {
   const { openCompanion } = useAiModal();
   const { t } = useLanguage();
@@ -18,11 +29,11 @@ function CompanionHeaderButton() {
     <Pressable
       onPress={openCompanion}
       accessibilityRole="button"
-      className="h-14 w-14 items-center justify-center rounded-full border-2 border-white bg-teal-700 shadow-lg"
+      className="h-16 w-16 items-center justify-center rounded-full border-2 border-white bg-teal-700 shadow-lg"
       accessibilityLabel={t("companion_fab_label")}
       accessibilityHint={t("companion_tap_to_speak")}
     >
-      <Mic size={30} color="white" />
+      <Mic size={36} color="white" />
     </Pressable>
   );
 }
@@ -34,8 +45,9 @@ export default function MainTabs() {
     <Tab.Navigator
       screenOptions={{
         headerRight: () => <CompanionHeaderButton />,
-        headerStyle: { height: 76 },
+        headerStyle: { height: 92 },
         headerRightContainerStyle: { paddingRight: 12 },
+        headerTitleContainerStyle: { left: 16, right: 96 },
         tabBarActiveTintColor: "#0f766e",
         tabBarInactiveTintColor: "#52525b",
         headerTitleStyle: { fontWeight: "800", fontSize: 22 },
@@ -48,6 +60,7 @@ export default function MainTabs() {
         component={HubScreen}
         options={{
           title: t("nav_title"),
+          headerTitle: () => <NeuroEchoLogo />,
           tabBarLabel: t("tab_hub"),
           tabBarIcon: ({ color, size }) => <Brain color={color} size={size} />,
         }}
