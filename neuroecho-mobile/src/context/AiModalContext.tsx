@@ -4,20 +4,27 @@ interface AiModalContextValue {
   isOpen: boolean;
   open: () => void;
   close: () => void;
+  isCompanionOpen: boolean;
+  openCompanion: () => void;
+  closeCompanion: () => void;
 }
 
 const AiModalContext = createContext<AiModalContextValue | null>(null);
 
 export function AiModalProvider({ children }: { children: React.ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [isCompanionOpen, setIsCompanionOpen] = useState(false);
 
   const value = useMemo(
     () => ({
       isOpen,
       open: () => setIsOpen(true),
       close: () => setIsOpen(false),
+      isCompanionOpen,
+      openCompanion: () => setIsCompanionOpen(true),
+      closeCompanion: () => setIsCompanionOpen(false),
     }),
-    [isOpen]
+    [isCompanionOpen, isOpen]
   );
 
   return <AiModalContext.Provider value={value}>{children}</AiModalContext.Provider>;

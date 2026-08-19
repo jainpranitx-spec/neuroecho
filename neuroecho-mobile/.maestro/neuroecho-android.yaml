@@ -1,30 +1,6 @@
 # Maestro flow for the NeuroEcho Expo / React Native Android app.
-#
-# Run with:
-#   maestro test neuroecho-mobile/.maestro/neuroecho-android.yaml
-# (assumes an Android emulator is running with the dev/preview build installed:
-#  `cd neuroecho-mobile && npx expo run:android` or the "Build Mobile App (EAS)"
-#  GitHub Actions workflow for a release-style APK/APpreview.)
-#
-# Selectors lean on:
-#   * `accessibilityLabel`s exposed by the source ("Ask NeuroEcho AI",
-#     "Talk to Echo, your AI companion", "Reset audio", "Reshuffle steps",
-#     "Close AI assistant", "Close").
-#   * Static English text rendered by `src/lib/i18n.ts` (Hub, Analytics, and
-#     Settings copy). After the deliberate "Switch language to Hindi" sweep
-#     in section 4, the UI is flipped back to English before any later flow
-#     so subsequent text selectors continue to match.
-#
-# Suggestions / known caveats:
-#   * `pressKey: Back` is the Android hardware-back gesture; it goes through
-#     React Navigation's default stack so it pops the per-game screen.
-#   * The Hub substitutes a hard-coded Cognitive Index of `88` when the
-#     backend API is unreachable (see HubScreen.tsx). We don't assert the
-#     numeric score so the test stays green in either mode.
-#   * If your APK was built under a different package id, change `appId`
-#     below (it must match `expo.android.package` in app.json).
 
-appId: com.neuroecho.arcade
+appId: host.exp.exponent
 name: NeuroEcho — Android end-to-end smoke
 tags:
   - smoke
@@ -45,17 +21,19 @@ tags:
 # ---------------------------------------------------------------------------
 
 - launchApp:
-    clearState: true   # wipe AsyncStorage so the welcome copy shows cleanly
-    appId: com.neuroecho.arcade
+    clearState: true
+    appId: host.exp.exponent
+    permissions:
+      android.permission.CAMERA: allow
+      android.permission.RECORD_AUDIO: allow
 
 # The Hub is the default tab on cold launch.
-- assertVisible: "NeuroEcho"                                       # navbar title
+- assertVisible: "NeuroEcho"
 - assertVisible: "Welcome to NeuroEcho"
 - assertVisible: "Pick a game below, or tap the microphone and Echo will help you."
 - assertVisible: "Your Cognitive Index"
 - assertVisible: "AI Insight"
 
-# All four game tiles should be visible without scrolling.
 - assertVisible: "Spot the AI Lie"
 - assertVisible: "Era Guesser"
 - assertVisible: "Recipe Rebuilder"
@@ -63,31 +41,46 @@ tags:
 
 # ---------------------------------------------------------------------------
 # 2. Tap into every game and verify the per-game screen loads, then back out.
-#    This guards the stack navigator and the four `Stack.Screen` entries
-#    declared in src/navigation/RootNavigator.tsx.
+#    Added waitForAnimationToEnd to let React Navigation transitions finish.
 # ---------------------------------------------------------------------------
 
 - tapOn: "Spot the AI Lie"
-- assertVisible: "Spot the AI Lie"           # the native-stack header title
-- assertVisible: "Reset audio"               # only on this game
+- waitForAnimationToEnd:
+    timeout: 2000
+- assertVisible: "Spot the AI Lie"
+- assertVisible: "Reset audio"
 - pressKey: Back
+- waitForAnimationToEnd:
+    timeout: 2000
 - assertVisible: "Welcome to NeuroEcho"
 
 - tapOn: "Era Guesser"
+- waitForAnimationToEnd:
+    timeout: 2000
 - assertVisible: "Era Guesser"
-- assertVisible: "Which item is anachronistic and doesn't belong in the"   # tagline
+- assertVisible: "Which item is anachronistic and doesn't belong in the"
 - pressKey: Back
+- waitForAnimationToEnd:
+    timeout: 2000
 - assertVisible: "Welcome to NeuroEcho"
 
 - tapOn: "Recipe Rebuilder"
+- waitForAnimationToEnd:
+    timeout: 2000
 - assertVisible: "Recipe Rebuilder"
 - assertVisible: "Reshuffle steps"
 - pressKey: Back
+- waitForAnimationToEnd:
+    timeout: 2000
 - assertVisible: "Welcome to NeuroEcho"
 
 - tapOn: "Motion Match"
+- waitForAnimationToEnd:
+    timeout: 2000
 - assertVisible: "Motion Match"
 - pressKey: Back
+- waitForAnimationToEnd:
+    timeout: 2000
 - assertVisible: "Welcome to NeuroEcho"
 
 # ---------------------------------------------------------------------------
@@ -95,8 +88,10 @@ tags:
 # ---------------------------------------------------------------------------
 
 - tapOn: "Analytics"
-- assertVisible: "Cognitive Analytics"               # navbar title
-- assertVisible: "Cognitive Analytics & Progress"    # H1 inside the card
+- waitForAnimationToEnd:
+    timeout: 2000
+- assertVisible: "Cognitive Analytics"
+- assertVisible: "Cognitive Analytics & Progress"
 - assertVisible: "Overall NeuroEcho Index"
 - assertVisible: "Cognitive Domain Breakdown"
 - assertVisible: "1. Spot the AI Lie (Auditory Memory)"
@@ -109,95 +104,100 @@ tags:
 # ---------------------------------------------------------------------------
 
 - tapOn: "Settings"
-- assertVisible: "Zen Settings"                       # navbar title
-- assertVisible: "Zen Settings & Tremor Adaptation"   # H1 inside the card
+- waitForAnimationToEnd:
+    timeout: 2000
+- assertVisible: "Zen Settings"
+- assertVisible: "Zen Settings & Tremor Adaptation"
 
 # 4a. Switch to Dark theme.
 - tapOn: "Dark"
-- assertVisible: "Dark"                               # label stays selected
+- assertVisible: "Dark"
 
-# 4b. Switch the UI language to Hindi. Note that the bottom tab labels are
-#     driven by the same i18n table, so once we land the switch the tab
-#     labels become होम / विश्लेषण / सेटिंग्स. We hop to Hub and verify the
-#     Hindi welcome card text.
+# 4b. Switch the UI language to Hindi.
 - tapOn: "हिन्दी"
-- tapOn: "होम"                                       # Hub tab in Hindi
-- assertVisible: "न्यूरोइको में आपका स्वागत है"        # hub_welcome in Hindi
+- waitForAnimationToEnd:
+    timeout: 2000
+- tapOn: "होम"
+- waitForAnimationToEnd:
+    timeout: 2000
+- assertVisible: "न्यूरोइको में आपका स्वागत है"
 
-# 4c. Flip back to English BEFORE the rest of the flow so text selectors
-#     lined up at the top of this file continue to match.
-- tapOn: "सेटिंग्स"                                   # Settings tab in Hindi
+# 4c. Flip back to English BEFORE the rest of the flow.
+- tapOn: "सेटिंग्स"
+- waitForAnimationToEnd:
+    timeout: 2000
 - tapOn: "English"
+- waitForAnimationToEnd:
+    timeout: 2000
 - tapOn: "Hub"
+- waitForAnimationToEnd:
+    timeout: 2000
 - assertVisible: "Welcome to NeuroEcho"
 
-# 4d. Push the rest of the toggles in one shot: tremor guard, speech rate,
-#     voice output, difficulty, then save.
+# 4d. Push the rest of the toggles in one shot.
 - tapOn: "Settings"
+- waitForAnimationToEnd:
+    timeout: 2000
 - assertVisible: "Voice Synthesis Pace"
 
-# Tremor assist ships ON; turn it OFF.
 - tapOn: "Active"
 - assertVisible: "Disabled"
 
-# Pick the slowest speech rate.
 - tapOn: "Slow & Clear (0.75x)"
 - assertVisible: "Maximum auditory clarity"
 
-# Voice output — the "Phone Speaker" button is Android-only (the source
-# hides it on iOS via Platform.OS === "android").
 - tapOn: "Phone Speaker"
 
-# Easiest difficulty.
 - tapOn: "Gentle Zen"
 - assertVisible: "Longer pauses & simpler questions"
 
-# Save and confirm the success toast.
 - tapOn: "Save"
 - assertVisible: "Settings Saved!"
 
 # ---------------------------------------------------------------------------
-# 5. AI Assistant modal (Sparkles button exposed via accessibilityLabel on
-#    every tab's header right — see src/navigation/MainTabs.tsx).
+# 5. AI Assistant modal
 # ---------------------------------------------------------------------------
 
-- assertVisible: "Ask NeuroEcho AI"            # a11y label of the header btn
-- tapOn:
-    accessibilityLabel: "Ask NeuroEcho AI"
+- assertVisible: "Ask NeuroEcho AI"
+- tapOn: "Ask NeuroEcho AI"
+- waitForAnimationToEnd:
+    timeout: 2000
 - assertVisible: "NeuroEcho AI Assistant"
 - assertVisible: "Ask Cognitive questions or request a custom game topic"
 
 - inputText: "How can I improve my memory?"
 - tapOn: "Ask AI"
-# We don't pin a specific answer (the backend returns dynamic text); we
-# only assert the response container + heading appear.
-- assertVisible: "NeuroEcho Cognitive Answer"
 
-# Close the modal via the X button (a11y-labeled "Close AI assistant").
-- tapOn:
-    accessibilityLabel: "Close AI assistant"
+# Explicitly wait for the dynamic network response from the AI backend
+- extendedWaitUntil:
+    visible: "NeuroEcho Cognitive Answer"
+    timeout: 10000
+
+- tapOn: "Close AI assistant"
+- waitForAnimationToEnd:
+    timeout: 2000
 - assertVisible: "Welcome to NeuroEcho"
 
 # ---------------------------------------------------------------------------
-# 6. AI Companion floating action button — the lucide-mic FAB mounted in
-#    src/components/AiCompanion.tsx. Tapping it must surface the
-#    "Talk to Echo" sheet; the recorder permission prompt only fires on the
-#    inner microphone button, so this assertion is permission-safe.
+# 6. AI Companion floating action button
 # ---------------------------------------------------------------------------
 
-- tapOn:
-    accessibilityLabel: "Talk to Echo, your AI companion"
+- tapOn: "Talk to Echo, your AI companion"
+- waitForAnimationToEnd:
+    timeout: 2000
 - assertVisible: "Talk to Echo"
 - assertVisible: "Tap the microphone and speak"
 
-# Close button on the companion (a11y-labeled "Close").
-- tapOn:
-    accessibilityLabel: "Close"
+- tapOn: "Close"
+- waitForAnimationToEnd:
+    timeout: 2000
 - assertVisible: "Welcome to NeuroEcho"
 
 # ---------------------------------------------------------------------------
-# 7. Reset the theme back to Light so the next run starts deterministic.
+# 7. Reset the theme back to Light.
 # ---------------------------------------------------------------------------
 
 - tapOn: "Settings"
+- waitForAnimationToEnd:
+    timeout: 2000
 - tapOn: "Light"

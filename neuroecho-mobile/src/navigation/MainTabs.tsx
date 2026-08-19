@@ -1,8 +1,7 @@
 import React from "react";
 import { Pressable } from "react-native";
-import Text from "../components/AccessibleText";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { BarChart2, Brain, Settings as SettingsIcon, Sparkles } from "lucide-react-native";
+import { BarChart2, Brain, Mic, Settings as SettingsIcon } from "lucide-react-native";
 import HubScreen from "../screens/HubScreen";
 import AnalyticsScreen from "../screens/AnalyticsScreen";
 import SettingsScreen from "../screens/SettingsScreen";
@@ -12,18 +11,18 @@ import { MainTabParamList } from "./types";
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
-function AskAiHeaderButton() {
-  const { open } = useAiModal();
+function CompanionHeaderButton() {
+  const { openCompanion } = useAiModal();
   const { t } = useLanguage();
   return (
     <Pressable
-      onPress={open}
+      onPress={openCompanion}
       accessibilityRole="button"
-      className="mr-3 min-h-12 flex-row items-center gap-2 rounded-2xl bg-teal-700 px-4 py-2"
-      accessibilityLabel={`${t("nav_help")}: NeuroEcho AI`}
+      className="h-14 w-14 items-center justify-center rounded-full border-2 border-white bg-teal-700 shadow-lg"
+      accessibilityLabel={t("companion_fab_label")}
+      accessibilityHint={t("companion_tap_to_speak")}
     >
-      <Sparkles size={20} color="white" />
-      <Text className="text-base font-bold text-white">{t("nav_help")}</Text>
+      <Mic size={30} color="white" />
     </Pressable>
   );
 }
@@ -34,7 +33,9 @@ export default function MainTabs() {
   return (
     <Tab.Navigator
       screenOptions={{
-        headerRight: () => <AskAiHeaderButton />,
+        headerRight: () => <CompanionHeaderButton />,
+        headerStyle: { height: 76 },
+        headerRightContainerStyle: { paddingRight: 12 },
         tabBarActiveTintColor: "#0f766e",
         tabBarInactiveTintColor: "#52525b",
         headerTitleStyle: { fontWeight: "800", fontSize: 22 },

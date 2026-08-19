@@ -3,10 +3,8 @@
 #
 # Include this at the top of any flow:
 #   - runFlow: flows/permissions.yaml
-#
-# The appId below must match the target APK's package.
 
-appId: com.neuroecho.arcade
+appId: host.exp.exponent
 name: Grant Android runtime permissions
 tags:
   - setup
@@ -14,10 +12,9 @@ tags:
 
 ---
 
-# -- Camera (used by Motion Match dual-task game stage) --
-- permission:
-    android: android.permission.CAMERA
-
-# -- Microphone (used by the AI Companion voice interaction) --
-- permission:
-    android: android.permission.RECORD_AUDIO
+# Permissions are granted via the launchApp command using the ': allow' syntax.
+- launchApp:
+    appId: host.exp.exponent
+    permissions:
+      android.permission.CAMERA: allow
+      android.permission.RECORD_AUDIO: allow

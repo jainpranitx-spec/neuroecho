@@ -11,7 +11,7 @@ import {
 import { File } from "expo-file-system";
 import { api, CompanionTurn, slugifyGameId } from "../lib/api";
 import { speakFeedback, stopSpeech } from "../lib/speech";
-import { navigateToGame, navigateToGeneratedGame, navigateToTab, navigationRef } from "../navigation/navigationRef";
+import { navigateToGame, navigateToGeneratedGame, navigateToTab } from "../navigation/navigationRef";
 import { useAsyncGuard } from "../lib/useAsyncGuard";
 import { setRecordingAudioMode, setPlaybackAudioMode, VOICE_RECORDING_OPTIONS } from "../lib/audioMode";
 import { useAudioOutput } from "../context/AudioOutputContext";
@@ -20,8 +20,7 @@ import { useLanguage } from "../context/LanguageContext";
 import { useAccessibility } from "../context/AccessibilityContext";
 import { saveLocalGeneratedGame } from "../lib/localGeneratedGames";
 import { GeneratedGameDefinition } from "../lib/generatedGames";
-
-const TAB_SCREENS = new Set(["Hub", "Analytics", "Settings"]);
+import { useAiModal } from "../context/AiModalContext";
 
 interface DisplayMessage {
   role: "user" | "assistant";
@@ -30,10 +29,10 @@ interface DisplayMessage {
 
 export default function AiCompanion() {
   const insets = useSafeAreaInsets();
+  const { isCompanionOpen: isOpen, closeCompanion: dismissCompanion } = useAiModal();
   const { output } = useAudioOutput();
   const { language, t } = useLanguage();
   const { reduceMotion } = useAccessibility();
-  const [isOpen, setIsOpen] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [isThinking, setIsThinking] = useState(false);
   const [isBuildingGame, setIsBuildingGame] = useState(false);
@@ -41,7 +40,6 @@ export default function AiCompanion() {
   const [messages, setMessages] = useState<DisplayMessage[]>([
     { role: "assistant", text: t("companion_greeting") },
   ]);
-  const [tabBarVisible, setTabBarVisible] = useState(true);
 
   const recorder = useAudioRecorder(VOICE_RECORDING_OPTIONS);
   const historyRef = useRef<CompanionTurn[]>([]);
@@ -62,27 +60,13 @@ export default function AiCompanion() {
     setMessages([{ role: "assistant", text: t("companion_greeting") }]);
   }, [language]);
 
-  // The companion FAB is mounted outside the tab navigator, so it has no
-  // way to know the tab bar's height — instead we just track whether the
-  // currently focused route is one of the tabbed screens and add extra
-  // clearance so we never sit on top of the tab bar.
   useEffect(() => {
-    const updateTabBarVisibility = () => {
-      if (!navigationRef.isReady()) return;
-      const routeName = navigationRef.getCurrentRoute()?.name;
-      setTabBarVisible(routeName ? TAB_SCREENS.has(routeName) : true);
-    };
-    updateTabBarVisibility();
-    const unsubscribe = navigationRef.addListener("state", updateTabBarVisibility);
-    return unsubscribe;
-  }, []);
-
-  const openCompanion = () => {
-    setIsOpen(true);
-    if (messages.length === 1) {
-      speakFeedback(t("companion_greeting"), 1.0);
+    if (isOpen) {
+      if (messages.length === 1) {
+        speakFeedback(t("companion_greeting"), 1.0);
+      }
     }
-  };
+  }, [isOpen]);
 
   const closeCompanion = () => {
     stopSpeech();
@@ -91,7 +75,7 @@ export default function AiCompanion() {
       setPlaybackAudioMode(output === "earpiece").catch(() => {});
       setIsRecording(false);
     }
-    setIsOpen(false);
+    dismissCompanion();
   };
 
   const startRecording = () => {
@@ -194,17 +178,6 @@ export default function AiCompanion() {
 
   return (
     <>
-      <Pressable
-        onPress={openCompanion}
-        accessibilityLabel={t("companion_fab_label")}
-        accessibilityRole="button"
-        accessibilityHint={t("companion_tap_to_speak")}
-        className="absolute right-5 h-24 w-24 items-center justify-center rounded-full border-2 border-white bg-teal-700 shadow-lg"
-        style={{ bottom: insets.bottom + (tabBarVisible ? 100 : 28) }}
-      >
-        <Mic size={40} color="white" />
-      </Pressable>
-
       <Modal visible={isOpen} animationType={reduceMotion ? "none" : "slide"} onRequestClose={closeCompanion}>
         <View className="flex-1 bg-zinc-50 dark:bg-zinc-950" style={{ paddingTop: insets.top }}>
           <View className="flex-row items-center justify-between border-b border-zinc-200 px-5 py-4 dark:border-zinc-800">
