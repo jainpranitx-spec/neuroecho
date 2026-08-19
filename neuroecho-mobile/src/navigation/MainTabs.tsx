@@ -45,7 +45,8 @@ export default function MainTabs() {
     <Tab.Navigator
       screenOptions={{
         headerRight: () => <CompanionHeaderButton />,
-        headerStyle: { height: 92 },
+        headerStyle: { height: 92, backgroundColor: "#2bb1be" },
+        headerShadowVisible: false,
         headerRightContainerStyle: { paddingRight: 12 },
         headerTitleContainerStyle: { left: 16, right: 96 },
         tabBarActiveTintColor: "#0f766e",
